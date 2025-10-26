@@ -11,10 +11,14 @@
     <script>
         (function() {
             const stored = localStorage.getItem('cecilartiste-theme');
-            if (stored) {
+            const available = ['vibrant', 'chromatique', 'pastel', 'solaire'];
+            if (stored && available.includes(stored)) {
                 document.documentElement.classList.add('theme-' + stored);
             } else {
                 document.documentElement.classList.add('theme-vibrant');
+                if (stored && !available.includes(stored)) {
+                    localStorage.removeItem('cecilartiste-theme');
+                }
             }
         })();
     </script>
@@ -32,8 +36,6 @@
             <form action="/admin/logout" method="post" class="main-nav__logout">
                 <button type="submit" class="admin-link">Déconnexion</button>
             </form>
-        <% } else { %>
-            <a class="admin-link" href="/admin" aria-label="Administration">Admin</a>
         <% } %>
     </nav>
 </header>

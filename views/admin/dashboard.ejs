@@ -46,8 +46,8 @@
                     <label for="palette">Palette</label>
                     <select id="palette" name="palette">
                         <option value="vibrant">Vibrant</option>
-                        <option value="aurora">Aurora</option>
-                        <option value="nocturne">Nocturne</option>
+                        <option value="chromatique">Chromatique</option>
+                        <option value="pastel">Pastel</option>
                         <option value="solaire">Solaire</option>
                     </select>
                 </div>
@@ -276,7 +276,7 @@
         <% if (!photos || photos.length === 0) { %>
             <p>Aucune photo pour le moment. Ajoutez vos œuvres pour les voir apparaître ici.</p>
         <% } else { %>
-            <% const palettes = { vibrant: 'Vibrant', aurora: 'Aurora', nocturne: 'Nocturne', solaire: 'Solaire' }; %>
+            <% const palettes = { vibrant: 'Vibrant', chromatique: 'Chromatique', pastel: 'Pastel', solaire: 'Solaire' }; %>
             <div class="admin-photos">
                 <% photos.forEach(photo => { %>
                     <article class="admin-photo-item">
