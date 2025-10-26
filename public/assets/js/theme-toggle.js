@@ -81,8 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const THEMES = [
         { id: 'vibrant', label: 'Vibrant' },
-        { id: 'aurora', label: 'Aurora' },
-        { id: 'nocturne', label: 'Nocturne' },
+        { id: 'chromatique', label: 'Chromatique' },
+        { id: 'pastel', label: 'Pastel' },
         { id: 'solaire', label: 'Solaire' }
     ];
     const transitionDuration = 650;
