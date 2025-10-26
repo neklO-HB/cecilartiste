@@ -57,7 +57,10 @@ const migrations = [
   )`,
   `CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY CHECK (id = 1),
-    contact_email TEXT NOT NULL
+    contact_email TEXT NOT NULL,
+    hero_intro_heading TEXT DEFAULT 'Qui suis-je ?' NOT NULL,
+    hero_intro_subheading TEXT DEFAULT 'Cécile, photographe professionnelle à Amiens' NOT NULL,
+    hero_intro_body TEXT DEFAULT 'Artiste photographe spécialisée dans les univers colorés, j’immortalise vos histoires à Amiens et partout où elles me portent. Reportages de mariages, portraits signature ou projets professionnels : je me déplace en France et à l’international pour créer des images lumineuses qui vous ressemblent.' NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS contact_messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,9 +86,46 @@ function prepareDatabase() {
     db.exec('ALTER TABLE photos ADD COLUMN category_id INTEGER REFERENCES categories(id)');
   }
 
-  db.prepare('INSERT OR IGNORE INTO settings (id, contact_email) VALUES (1, ?)').run(
-    'contact@cecilartiste.com'
+  const settingsColumns = db.prepare('PRAGMA table_info(settings)').all();
+  const columnNames = settingsColumns.map(column => column.name);
+
+  const heroDefaults = {
+    heading: 'Qui suis-je ?',
+    subheading: 'Cécile, photographe professionnelle à Amiens',
+    body:
+      'Artiste photographe spécialisée dans les univers colorés, j’immortalise vos histoires à Amiens et partout où elles me portent. Reportages de mariages, portraits signature ou projets professionnels : je me déplace en France et à l’international pour créer des images lumineuses qui vous ressemblent.',
+  };
+
+  if (!columnNames.includes('hero_intro_heading')) {
+    db.exec(
+      "ALTER TABLE settings ADD COLUMN hero_intro_heading TEXT DEFAULT 'Qui suis-je ?' NOT NULL"
+    );
+  }
+
+  if (!columnNames.includes('hero_intro_subheading')) {
+    db.exec(
+      "ALTER TABLE settings ADD COLUMN hero_intro_subheading TEXT DEFAULT 'Cécile, photographe professionnelle à Amiens' NOT NULL"
+    );
+  }
+
+  if (!columnNames.includes('hero_intro_body')) {
+    db.exec(
+      "ALTER TABLE settings ADD COLUMN hero_intro_body TEXT DEFAULT 'Artiste photographe spécialisée dans les univers colorés, j’immortalise vos histoires à Amiens et partout où elles me portent. Reportages de mariages, portraits signature ou projets professionnels : je me déplace en France et à l’international pour créer des images lumineuses qui vous ressemblent.' NOT NULL"
+    );
+  }
+
+  db.prepare(
+    'INSERT OR IGNORE INTO settings (id, contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body) VALUES (1, ?, ?, ?, ?)'
+  ).run(
+    'contact@cecilartiste.com',
+    heroDefaults.heading.trim(),
+    heroDefaults.subheading,
+    heroDefaults.body
   );
+
+  db.prepare(
+    'UPDATE settings SET hero_intro_heading = COALESCE(NULLIF(TRIM(hero_intro_heading), ""), ?), hero_intro_subheading = COALESCE(NULLIF(TRIM(hero_intro_subheading), ""), ?), hero_intro_body = COALESCE(NULLIF(TRIM(hero_intro_body), ""), ?) WHERE id = 1'
+  ).run(heroDefaults.heading.trim(), heroDefaults.subheading, heroDefaults.body);
 
   const defaultCategories = [
     'Mariage',
@@ -101,11 +141,7 @@ function prepareDatabase() {
     if (!existing) {
       db.prepare(
         'INSERT INTO categories (name, description, position) VALUES (?, ?, ?)'
-      ).run(
-        name,
-        `Personnalisez votre texte pour la catégorie ${name.toLowerCase()} depuis l\'espace d\'administration.`,
-        index
-      );
+      ).run(name, null, index);
     }
   });
 }

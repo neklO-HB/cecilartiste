@@ -1,7 +1,22 @@
 <%- include('partials/header') %>
+<section class="identity-hero" aria-labelledby="identity-hero-title">
+    <div class="identity-hero__content">
+        <p class="identity-hero__eyebrow"><%= heroIntro.heading %></p>
+        <h1 class="identity-hero__title" id="identity-hero-title"><%= heroIntro.subheading %></h1>
+        <p class="identity-hero__description"><%- nl2br(heroIntro.body) %></p>
+        <div class="identity-hero__tags" role="list">
+            <span class="identity-hero__tag" role="listitem">Photographe à Amiens</span>
+            <span class="identity-hero__tag" role="listitem">Je me déplace partout</span>
+        </div>
+    </div>
+    <div class="identity-hero__visual" aria-hidden="true">
+        <div class="identity-hero__image"></div>
+        <div class="identity-hero__frame"></div>
+    </div>
+</section>
 <section class="hero">
     <div class="hero__intro">
-        <h1>Photographe à Amiens, vos histoires en lumière</h1>
+        <h2>Photographe à Amiens, vos histoires en lumière</h2>
         <p>
             Bienvenue dans l'univers de Cecil'Artiste, photographe professionnelle basée à Amiens et dans toute la Somme (80).
             Mariage, baptême, anniversaire, grossesse ou arrivée de bébé : je capture vos émotions avec une signature
@@ -26,7 +41,6 @@
                     </div>
                     <div class="category-card__content">
                         <h3><%= category.name %></h3>
-                        <p><%- nl2br(category.description || 'Personnalisez ce texte depuis votre espace d\'administration.') %></p>
                     </div>
                 </article>
             <% }) %>
@@ -39,7 +53,6 @@
                     </div>
                     <div class="category-card__content">
                         <h3><%= label %></h3>
-                        <p>Ajoutez votre description personnalisée et un visuel depuis le panneau d'administration.</p>
                     </div>
                 </article>
             <% }) %>
@@ -211,36 +224,6 @@
             <div class="editorial-panel__label">Portraits graphiques</div>
             <p>Jeux d'ombres, lignes architecturales et palette contrastée pour révéler chaque personnalité.</p>
         </article>
-    </div>
-</section>
-
-<section class="gallery-section">
-    <div class="gallery-header">
-        <h2>Collections Signature</h2>
-        <p>Des instants en couleur, façonnés par la lumière. Faites défiler les séries pour découvrir le style de Cecil'Artiste et imaginez vos propres souvenirs capturés avec audace.</p>
-    </div>
-    <div class="gallery-grid">
-        <% if (photos && photos.length > 0) { %>
-            <% photos.forEach(photo => { %>
-                <article class="photo-card" style="--photo-accent: <%= photo.accent_color || '#ff6f61' %>;">
-                    <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
-                    <div class="photo-card__info">
-                        <h3><%= photo.title %></h3>
-                        <% if (photo.description) { %>
-                            <p><%- nl2br(photo.description) %></p>
-                        <% } %>
-                    </div>
-                    <div class="photo-card__tags">
-                        <span class="photo-card__tag">Palette <%= (photo.palette || '').charAt(0).toUpperCase() + (photo.palette || '').slice(1) %></span>
-                        <span class="photo-card__tag">Créée le <%= formatDate(photo.created_at) %></span>
-                    </div>
-                </article>
-            <% }) %>
-        <% } else { %>
-            <div class="notice">
-                <strong>Votre galerie est prête&nbsp;!</strong> Ajoutez vos premières photos via l'espace d'administration pour révéler votre univers à vos visiteurs.
-            </div>
-        <% } %>
     </div>
 </section>
 

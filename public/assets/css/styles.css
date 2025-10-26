@@ -188,6 +188,133 @@ html.theme-aurora .site-header {
     padding: 2rem clamp(1.5rem, 4vw, 4rem) 6rem;
 }
 
+.identity-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: clamp(2rem, 6vw, 4rem);
+    align-items: center;
+    padding: clamp(2.5rem, 6vw, 4rem);
+    margin-bottom: clamp(3rem, 7vw, 5rem);
+    border-radius: calc(var(--radius-large) + 10px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.55));
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+}
+
+.identity-hero::after {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 111, 97, 0.15), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(78, 205, 196, 0.18), transparent 45%),
+        radial-gradient(circle at 110% 75%, rgba(255, 209, 102, 0.18), transparent 35%);
+    z-index: 0;
+}
+
+.identity-hero__content,
+.identity-hero__visual {
+    position: relative;
+    z-index: 1;
+}
+
+.identity-hero__content {
+    display: grid;
+    gap: 1.2rem;
+}
+
+.identity-hero__eyebrow {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-color);
+}
+
+.identity-hero__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 4.8vw, 3.8rem);
+    line-height: 1.1;
+    color: var(--text-primary);
+}
+
+.identity-hero__description {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-secondary);
+}
+
+.identity-hero__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+}
+
+.identity-hero__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    background: rgba(255, 255, 255, 0.72);
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+}
+
+.identity-hero__tag::before {
+    content: '';
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--accent-color);
+}
+
+.identity-hero__visual {
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+
+.identity-hero__image {
+    width: min(100%, 380px);
+    aspect-ratio: 4 / 5;
+    border-radius: calc(var(--radius-large) + 6px);
+    background-image: url('https://images.unsplash.com/photo-1526948128573-703ee1aeb6fa?auto=format&fit=crop&w=900&q=80');
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.identity-hero__frame {
+    position: absolute;
+    width: clamp(140px, 32vw, 220px);
+    height: clamp(140px, 32vw, 220px);
+    border-radius: 40%;
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    inset: auto auto 14% -6%;
+    transform: rotate(-12deg);
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.2), rgba(255, 111, 97, 0.35));
+    box-shadow: 0 18px 40px rgba(255, 111, 97, 0.25);
+}
+
+.identity-hero__visual::after {
+    content: '';
+    position: absolute;
+    inset: 12%;
+    border-radius: calc(var(--radius-large) + 20px);
+    background: linear-gradient(135deg, rgba(255, 111, 97, 0.18), rgba(78, 205, 196, 0.15));
+    filter: blur(40px);
+    z-index: -1;
+}
+
 .hero {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -196,7 +323,7 @@ html.theme-aurora .site-header {
     margin-bottom: 4rem;
 }
 
-.hero__intro h1 {
+.hero__intro h2 {
     font-family: var(--font-display);
     font-size: clamp(2.4rem, 4vw, 3.6rem);
     margin-bottom: 1rem;
@@ -285,7 +412,7 @@ html.theme-aurora .site-header {
     display: flex;
     flex-direction: column;
     background: var(--card-background);
-    border-radius: 24px;
+    border-radius: calc(var(--radius-large) + 6px);
     overflow: hidden;
     position: relative;
     box-shadow: var(--shadow-soft);
@@ -329,24 +456,20 @@ html.theme-aurora .site-header {
 }
 
 .category-card__content {
-    padding: 1.4rem 1.6rem 1.6rem;
+    padding: 1.6rem 1.8rem 2rem;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .category-card__content h3 {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 1.2rem;
+    font-size: 1.35rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-}
-
-.category-card__content p {
-    margin: 0;
-    font-size: 0.95rem;
-    color: var(--text-secondary);
 }
 
 .experience-ribbon {
@@ -1192,6 +1315,15 @@ html.theme-aurora .notice {
     justify-content: center;
     padding: 0.6rem 1.2rem;
     background: rgba(0, 0, 0, 0.06);
+    border: none;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.admin-shortcuts .button-secondary.is-active {
+    background: var(--accent-color);
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
 }
 
 .admin-card--wide {
@@ -1284,6 +1416,13 @@ html.theme-aurora .category-item {
 .admin-form {
     display: grid;
     gap: 1rem;
+}
+
+.admin-form small {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
 }
 
 .admin-form--delete {
@@ -1387,11 +1526,34 @@ html.theme-aurora .admin-photo-item {
     font-family: var(--font-display);
 }
 
+@media (max-width: 960px) {
+    .identity-hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .identity-hero__content {
+        order: 2;
+    }
+
+    .identity-hero__visual {
+        order: 1;
+    }
+
+    .identity-hero__tags {
+        justify-content: center;
+    }
+}
+
 @media (max-width: 720px) {
     .site-header {
         flex-direction: column;
         gap: 1.5rem;
         padding-bottom: 1rem;
+    }
+
+    .identity-hero {
+        padding: 2rem;
     }
 
     .hero {
