@@ -15,6 +15,7 @@
         <button type="button" class="button-secondary" data-admin-target="photos">Vos photos</button>
         <button type="button" class="button-secondary" data-admin-target="categories">Catégories</button>
         <button type="button" class="button-secondary" data-admin-target="hero-intro">Présentation</button>
+        <button type="button" class="button-secondary" data-admin-target="experiences">Expériences</button>
         <button type="button" class="button-secondary" data-admin-target="contact-settings">Contact</button>
         <button type="button" class="button-secondary" data-admin-target="messages">Messages</button>
     </nav>
@@ -92,6 +93,102 @@
                 </div>
                 <button type="submit" class="button-primary">Enregistrer</button>
             </form>
+        </section>
+
+        <section class="admin-card admin-card--wide" id="experiences" data-admin-section="experiences">
+            <h2>Expériences mises en avant</h2>
+            <p>Gérez les rubans d'expériences visibles sur l'accueil : icônes, images et textes peuvent être personnalisés.</p>
+            <div class="experience-manager">
+                <div class="experience-manager__column">
+                    <h3>Ajouter une expérience</h3>
+                    <form class="admin-form" method="post" action="/admin/experiences" enctype="multipart/form-data">
+                        <div>
+                            <label for="experience_title">Titre</label>
+                            <input type="text" id="experience_title" name="title" required>
+                        </div>
+                        <div>
+                            <label for="experience_description">Description</label>
+                            <textarea id="experience_description" name="description" rows="3" required></textarea>
+                            <small>Ce texte apparaît sous le titre sur la page d'accueil.</small>
+                        </div>
+                        <div>
+                            <label for="experience_icon">Icône (emoji ou caractère)</label>
+                            <input type="text" id="experience_icon" name="icon" maxlength="8" placeholder="Exemple : 📸">
+                            <small>Facultatif si vous ajoutez une image.</small>
+                        </div>
+                        <div>
+                            <label for="experience_image">Image</label>
+                            <input type="file" id="experience_image" name="image" accept="image/*">
+                            <small>Optionnelle. Remplace l'icône si fournie.</small>
+                        </div>
+                        <div>
+                            <label for="experience_position">Position</label>
+                            <input type="number" id="experience_position" name="position" placeholder="0">
+                            <small>Ordre d'affichage (plus petit = plus à gauche).</small>
+                        </div>
+                        <button type="submit" class="button-primary">Ajouter</button>
+                    </form>
+                </div>
+                <div class="experience-manager__column">
+                    <h3>Expériences existantes</h3>
+                    <% if (!experiences || experiences.length === 0) { %>
+                        <p>Aucune expérience n'est définie pour le moment. Ajoutez vos propositions clés.</p>
+                    <% } else { %>
+                        <div class="experience-list">
+                            <% experiences.forEach(experience => { %>
+                                <article class="experience-item">
+                                    <div class="experience-item__preview">
+                                        <% if (experience.image_path) { %>
+                                            <img src="<%= experience.image_path %>" alt="Illustration de <%= experience.title %>">
+                                        <% } else if (experience.icon) { %>
+                                            <span class="experience-item__icon"><%= experience.icon %></span>
+                                        <% } else { %>
+                                            <div class="experience-item__placeholder">Icône ou image à ajouter</div>
+                                        <% } %>
+                                    </div>
+                                    <div class="experience-item__content">
+                                        <form class="admin-form" method="post" action="/admin/experiences/<%= experience.id %>" enctype="multipart/form-data">
+                                            <div>
+                                                <label for="experience_title_<%= experience.id %>">Titre</label>
+                                                <input type="text" id="experience_title_<%= experience.id %>" name="title" required value="<%= experience.title %>">
+                                            </div>
+                                            <div>
+                                                <label for="experience_description_<%= experience.id %>">Description</label>
+                                                <textarea id="experience_description_<%= experience.id %>" name="description" rows="3" required><%= experience.description %></textarea>
+                                            </div>
+                                            <div>
+                                                <label for="experience_icon_<%= experience.id %>">Icône</label>
+                                                <input type="text" id="experience_icon_<%= experience.id %>" name="icon" value="<%= experience.icon || '' %>" maxlength="8" placeholder="Exemple : 📸">
+                                                <small>Laissez vide si vous préférez utiliser uniquement l'image.</small>
+                                            </div>
+                                            <div>
+                                                <label for="experience_image_<%= experience.id %>">Remplacer l'image</label>
+                                                <input type="file" id="experience_image_<%= experience.id %>" name="image" accept="image/*">
+                                            </div>
+                                            <% if (experience.image_path) { %>
+                                                <label class="admin-form__checkbox">
+                                                    <input type="checkbox" name="remove_image" value="on">
+                                                    <span>Supprimer l'image actuelle</span>
+                                                </label>
+                                            <% } %>
+                                            <div>
+                                                <label for="experience_position_<%= experience.id %>">Position</label>
+                                                <input type="number" id="experience_position_<%= experience.id %>" name="position" value="<%= typeof experience.position === 'number' ? experience.position : '' %>">
+                                            </div>
+                                            <div class="admin-photo-actions">
+                                                <button type="submit" class="button-secondary">Enregistrer</button>
+                                            </div>
+                                        </form>
+                                        <form class="admin-form admin-form--delete" method="post" action="/admin/experiences/<%= experience.id %>/delete" onsubmit="return confirm('Supprimer cette expérience ?');">
+                                            <button type="submit" class="button-danger">Supprimer</button>
+                                        </form>
+                                    </div>
+                                </article>
+                            <% }) %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
         </section>
 
         <section class="admin-card" id="contact-settings" data-admin-section="contact-settings">

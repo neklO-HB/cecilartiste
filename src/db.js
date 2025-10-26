@@ -55,6 +55,15 @@ const migrations = [
     position INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS experiences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    icon TEXT,
+    image_path TEXT,
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     contact_email TEXT NOT NULL,
@@ -72,7 +81,8 @@ const migrations = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_photos_created_at ON photos(created_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_messages_created_at ON contact_messages(created_at DESC)`,
-  `CREATE INDEX IF NOT EXISTS idx_categories_position ON categories(position ASC, name ASC)`
+  `CREATE INDEX IF NOT EXISTS idx_categories_position ON categories(position ASC, name ASC)`,
+  `CREATE INDEX IF NOT EXISTS idx_experiences_position ON experiences(position ASC, title ASC)`
 ];
 
 function prepareDatabase() {
@@ -144,6 +154,54 @@ function prepareDatabase() {
       ).run(name, null, index);
     }
   });
+
+  const experienceColumns = db.prepare('PRAGMA table_info(experiences)').all();
+  const experienceColumnNames = experienceColumns.map(column => column.name);
+
+  if (!experienceColumnNames.includes('icon')) {
+    db.exec('ALTER TABLE experiences ADD COLUMN icon TEXT');
+  }
+
+  if (!experienceColumnNames.includes('image_path')) {
+    db.exec('ALTER TABLE experiences ADD COLUMN image_path TEXT');
+  }
+
+  if (!experienceColumnNames.includes('position')) {
+    db.exec('ALTER TABLE experiences ADD COLUMN position INTEGER NOT NULL DEFAULT 0');
+  }
+
+  const defaultExperiences = [
+    {
+      title: 'Reportages vibrants',
+      description:
+        "Saisir le mouvement, l'énergie et les couleurs intenses de vos événements artistiques.",
+      icon: '📸',
+    },
+    {
+      title: 'Portraits poétiques',
+      description:
+        'Composer des portraits sensibles inspirés par la lumière naturelle et la mise en scène.',
+      icon: '🌤️',
+    },
+    {
+      title: 'Univers de marque',
+      description:
+        "Construire des visuels signature pour révéler l'ADN coloré de votre entreprise.",
+      icon: '🍹',
+    },
+  ];
+
+  const { count: experienceCount } = db
+    .prepare('SELECT COUNT(*) AS count FROM experiences')
+    .get();
+
+  if (experienceCount === 0) {
+    defaultExperiences.forEach((experience, index) => {
+      db.prepare(
+        'INSERT INTO experiences (title, description, icon, position) VALUES (?, ?, ?, ?)'
+      ).run(experience.title, experience.description, experience.icon, index);
+    });
+  }
 }
 
 prepareDatabase();
