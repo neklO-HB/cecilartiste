@@ -43,11 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLabel(themeId);
 
         if (persist) {
-            localStorage.setItem('cecile-theme', themeId);
+            localStorage.setItem('cecilartiste-theme', themeId);
         }
     }
 
-    const stored = localStorage.getItem('cecile-theme');
+    const stored = localStorage.getItem('cecilartiste-theme');
     if (stored) {
         applyTheme(stored, { animate: false });
     } else {

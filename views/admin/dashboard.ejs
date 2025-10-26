@@ -3,12 +3,19 @@
     <header class="gallery-header">
         <div>
             <h1>Administration du portfolio</h1>
-            <p>Connectée en tant que <%= currentUser ? currentUser.username : 'Cécile' %>. Gérez vos images et votre email de contact en toute simplicité.</p>
+            <p>Connectée en tant que <%= currentUser ? currentUser.username : "Cecil" %>. Gérez vos images, vos catégories et votre email de contact en toute simplicité.</p>
         </div>
         <form action="/admin/logout" method="post">
             <button type="submit" class="button-secondary">Se déconnecter</button>
         </form>
-    </header>
+</header>
+
+    <nav class="admin-shortcuts" aria-label="Navigation rapide">
+        <a class="button-secondary" href="#add-photo">Ajouter une photo</a>
+        <a class="button-secondary" href="#categories">Catégories</a>
+        <a class="button-secondary" href="#contact-settings">Contact</a>
+        <a class="button-secondary" href="#messages">Messages</a>
+    </nav>
 
     <% if (feedback) { %>
         <div class="notice"><%= feedback %></div>
@@ -21,7 +28,7 @@
     <% } %>
 
     <div class="admin-grid">
-        <section class="admin-card">
+        <section class="admin-card" id="add-photo">
             <h2>Ajouter une nouvelle photo</h2>
             <form class="admin-form" method="post" action="/admin/photos" enctype="multipart/form-data">
                 <div>
@@ -46,6 +53,17 @@
                     <input type="color" id="accent_color" name="accent_color" value="#ff6f61">
                 </div>
                 <div>
+                    <label for="category_id">Catégorie</label>
+                    <select id="category_id" name="category_id">
+                        <option value="">Sans catégorie</option>
+                        <% if (categories && categories.length) { %>
+                            <% categories.forEach(category => { %>
+                                <option value="<%= category.id %>"><%= category.name %></option>
+                            <% }) %>
+                        <% } %>
+                    </select>
+                </div>
+                <div>
                     <label for="photo">Image</label>
                     <input type="file" id="photo" name="photo" accept="image/*" required>
                 </div>
@@ -53,7 +71,7 @@
             </form>
         </section>
 
-        <section class="admin-card">
+        <section class="admin-card" id="contact-settings">
             <h2>Paramètres de contact</h2>
             <form class="admin-form" method="post" action="/admin/contact-email">
                 <div>
@@ -65,7 +83,83 @@
         </section>
     </div>
 
-    <section class="admin-card">
+    <section class="admin-card admin-card--wide" id="categories">
+        <h2>Catégories du portfolio</h2>
+        <p>Personnalisez les univers présentés sur la page d'accueil et assignez vos photos aux bonnes thématiques.</p>
+        <div class="category-manager">
+            <div class="category-manager__column">
+                <h3>Créer une catégorie</h3>
+                <form class="admin-form" method="post" action="/admin/categories" enctype="multipart/form-data">
+                    <div>
+                        <label for="category_name">Nom</label>
+                        <input type="text" id="category_name" name="name" required>
+                    </div>
+                    <div>
+                        <label for="category_description">Texte d'accroche</label>
+                        <textarea id="category_description" name="description" rows="3" placeholder="Décrivez l'univers de cette catégorie."></textarea>
+                    </div>
+                    <div>
+                        <label for="category_position">Position</label>
+                        <input type="number" id="category_position" name="position" min="0" placeholder="0">
+                    </div>
+                    <div>
+                        <label for="category_hero_image">Image de mise en avant</label>
+                        <input type="file" id="category_hero_image" name="hero_image" accept="image/*" required>
+                        <small>Format conseillé : photo horizontale. Cette image apparaîtra dans la mosaïque d'accueil.</small>
+                    </div>
+                    <button type="submit" class="button-primary">Créer</button>
+                </form>
+            </div>
+            <div class="category-manager__column">
+                <h3>Catégories existantes</h3>
+                <% if (!categories || categories.length === 0) { %>
+                    <p>Aucune catégorie définie pour le moment. Créez vos univers pour structurer votre portfolio.</p>
+                <% } else { %>
+                    <div class="category-list">
+                        <% categories.forEach(category => { %>
+                            <article class="category-item">
+                                <div class="category-item__preview">
+                                    <% if (category.hero_image_path) { %>
+                                        <img src="<%= category.hero_image_path %>" alt="Visuel de la catégorie <%= category.name %>">
+                                    <% } else { %>
+                                        <div class="category-item__placeholder">Image à ajouter</div>
+                                    <% } %>
+                                </div>
+                                <div class="category-item__content">
+                                    <form class="admin-form" method="post" action="/admin/categories/<%= category.id %>" enctype="multipart/form-data">
+                                        <div>
+                                            <label for="category_name_<%= category.id %>">Nom</label>
+                                            <input type="text" id="category_name_<%= category.id %>" name="name" required value="<%= category.name %>">
+                                        </div>
+                                        <div>
+                                            <label for="category_description_<%= category.id %>">Texte d'accroche</label>
+                                            <textarea id="category_description_<%= category.id %>" name="description" rows="3"><%= category.description || '' %></textarea>
+                                        </div>
+                                        <div>
+                                            <label for="category_position_<%= category.id %>">Position</label>
+                                            <input type="number" id="category_position_<%= category.id %>" name="position" value="<%= category.position %>">
+                                        </div>
+                                        <div>
+                                            <label for="category_image_<%= category.id %>">Remplacer l'image</label>
+                                            <input type="file" id="category_image_<%= category.id %>" name="hero_image" accept="image/*">
+                                        </div>
+                                        <div class="admin-photo-actions">
+                                            <button type="submit" class="button-secondary">Enregistrer</button>
+                                        </div>
+                                    </form>
+                                    <form class="admin-form admin-form--delete" method="post" action="/admin/categories/<%= category.id %>/delete" onsubmit="return confirm('Supprimer cette catégorie ? Les photos associées resteront en ligne sans catégorie.');">
+                                        <button type="submit" class="button-danger">Supprimer</button>
+                                    </form>
+                                </div>
+                            </article>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-card" id="photos">
         <h2>Vos photos</h2>
         <% if (!photos || photos.length === 0) { %>
             <p>Aucune photo pour le moment. Ajoutez vos œuvres pour les voir apparaître ici.</p>
@@ -102,6 +196,17 @@
                                     <input type="color" id="accent_<%= photo.id %>" name="accent_color" value="<%= photo.accent_color || '#ff6f61' %>">
                                 </div>
                                 <div>
+                                    <label for="category_<%= photo.id %>">Catégorie</label>
+                                    <select id="category_<%= photo.id %>" name="category_id">
+                                        <option value="" <%= !photo.category_id ? 'selected' : '' %>>Sans catégorie</option>
+                                        <% if (categories && categories.length) { %>
+                                            <% categories.forEach(category => { %>
+                                                <option value="<%= category.id %>" <%= photo.category_id === category.id ? 'selected' : '' %>><%= category.name %></option>
+                                            <% }) %>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div>
                                     <label for="photo_<%= photo.id %>">Remplacer l'image</label>
                                     <input type="file" id="photo_<%= photo.id %>" name="photo" accept="image/*">
                                 </div>
@@ -119,7 +224,7 @@
         <% } %>
     </section>
 
-    <section class="admin-card">
+    <section class="admin-card" id="messages">
         <h2>Messages reçus</h2>
         <% if (!messages || messages.length === 0) { %>
             <p>Aucun message pour le moment.</p>

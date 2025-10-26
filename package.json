@@ -1,7 +1,7 @@
 {
   "name": "cecileartiste",
   "version": "2.0.0",
-  "description": "Portfolio Cécile'Artiste migré vers Node.js",
+  "description": "Portfolio Cecil'Artiste migré vers Node.js",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

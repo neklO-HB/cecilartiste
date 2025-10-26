@@ -1,32 +1,48 @@
 <%- include('partials/header') %>
 <section class="hero">
     <div class="hero__intro">
-        <h1>Capturer l'éclat de vos histoires</h1>
+        <h1>Photographe à Amiens, vos histoires en lumière</h1>
         <p>
-            Bienvenue dans l'univers de Cécile'Artiste, photographe passionnée par les couleurs et les émotions.
-            Je crée des expériences visuelles sur-mesure pour vos mariages, portraits et événements professionnels.
-            Explorez mes séries et vivez l'énergie créative de chaque image.
+            Bienvenue dans l'univers de Cecil'Artiste, photographe professionnelle basée à Amiens et dans toute la Somme (80).
+            Mariage, baptême, anniversaire, grossesse ou arrivée de bébé : je capture vos émotions avec une signature
+            artistique et colorée. Explorez chaque catégorie ci-dessous et personnalisez leurs visuels depuis votre espace
+            d'administration.
         </p>
         <div class="hero__cta">
-            <a class="button" href="#experiences">Explorer les expériences</a>
+            <a class="button" href="#categories-explore">Explorer les catégories</a>
             <a class="button button--ghost" href="/contact">Composer votre projet</a>
         </div>
     </div>
-    <div class="hero__mosaic">
-        <% if (heroPhotos && heroPhotos.length > 0) { %>
-            <% heroPhotos.forEach(photo => { %>
-                <figure>
-                    <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
-                    <figcaption><%= photo.title %></figcaption>
-                </figure>
+    <div class="hero__mosaic" id="categories-explore">
+        <% if (categories && categories.length > 0) { %>
+            <% categories.forEach(category => { %>
+                <article class="category-card">
+                    <div class="category-card__media">
+                        <% if (category.hero_image_path) { %>
+                            <img src="<%= category.hero_image_path %>" alt="Aperçu de la catégorie <%= category.name %>">
+                        <% } else { %>
+                            <div class="category-card__placeholder">Ajoutez une image depuis l'administration</div>
+                        <% } %>
+                    </div>
+                    <div class="category-card__content">
+                        <h3><%= category.name %></h3>
+                        <p><%- nl2br(category.description || 'Personnalisez ce texte depuis votre espace d\'administration.') %></p>
+                    </div>
+                </article>
             <% }) %>
         <% } else { %>
-            <% for (let i = 0; i < 6; i += 1) { %>
-                <figure>
-                    <div class="placeholder" style="background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary)); height: 140px;"></div>
-                    <figcaption>Votre image ici</figcaption>
-                </figure>
-            <% } %>
+            <% const placeholders = ['Mariage', 'Baptême', 'Anniversaire', 'Grossesse', 'Nouveau-né', 'Autres']; %>
+            <% placeholders.forEach(label => { %>
+                <article class="category-card">
+                    <div class="category-card__media">
+                        <div class="category-card__placeholder">Image de catégorie à définir</div>
+                    </div>
+                    <div class="category-card__content">
+                        <h3><%= label %></h3>
+                        <p>Ajoutez votre description personnalisée et un visuel depuis le panneau d'administration.</p>
+                    </div>
+                </article>
+            <% }) %>
         <% } %>
     </div>
 </section>
@@ -201,7 +217,7 @@
 <section class="gallery-section">
     <div class="gallery-header">
         <h2>Collections Signature</h2>
-        <p>Des instants en couleur, façonnés par la lumière. Faites défiler les séries pour découvrir le style de Cécile'Artiste et imaginez vos propres souvenirs capturés avec audace.</p>
+        <p>Des instants en couleur, façonnés par la lumière. Faites défiler les séries pour découvrir le style de Cecil'Artiste et imaginez vos propres souvenirs capturés avec audace.</p>
     </div>
     <div class="gallery-grid">
         <% if (photos && photos.length > 0) { %>
