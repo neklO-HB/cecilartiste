@@ -4,6 +4,7 @@ const session = require('express-session');
 const multer = require('multer');
 const db = require('./src/db');
 const { verifyPassword } = require('./src/passwords');
+const experiencesService = require('./src/experiences');
 const {
   ensureUploadDir,
   formatDate,
@@ -139,15 +140,7 @@ app.get(
         ...category,
         hero_image_path: normalizePublicPath(category.hero_image_path),
       }));
-    const experiences = db
-      .prepare(
-        'SELECT id, title, description, icon, image_path FROM experiences ORDER BY position ASC, id ASC'
-      )
-      .all()
-      .map(experience => ({
-        ...experience,
-        image_path: normalizePublicPath(experience.image_path),
-      }));
+    const experiences = experiencesService.getAllExperiences(db);
     const heroSettings = db
       .prepare(
         'SELECT hero_intro_heading, hero_intro_subheading, hero_intro_body FROM settings WHERE id = 1'
@@ -287,15 +280,7 @@ app.get(
         ...category,
         hero_image_path: normalizePublicPath(category.hero_image_path),
       }));
-    const experiences = db
-      .prepare(
-        'SELECT id, title, description, icon, image_path, position FROM experiences ORDER BY position ASC, id ASC'
-      )
-      .all()
-      .map(experience => ({
-        ...experience,
-        image_path: normalizePublicPath(experience.image_path),
-      }));
+    const experiences = experiencesService.getAllExperiences(db);
     const settings = db
       .prepare(
         'SELECT contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body FROM settings WHERE id = 1'
@@ -679,15 +664,12 @@ app.post(
   requireAuth,
   optionalUpload('image', 'experiences'),
   asyncHandler(async (req, res) => {
+    const { position: rawPosition = '' } = req.body;
     const {
-      title = '',
-      description = '',
-      icon = '',
-      position: rawPosition = '',
-    } = req.body;
-    const trimmedTitle = title.trim();
-    const trimmedDescription = description.trim();
-    const trimmedIcon = icon.trim();
+      title: trimmedTitle,
+      description: trimmedDescription,
+      icon: trimmedIcon,
+    } = experiencesService.sanitizeExperiencePayload(req.body);
     const hasImage = Boolean(req.file);
     const newImagePath = hasImage ? `/uploads/${req.file.filename}` : null;
     const errors = [];
@@ -704,16 +686,7 @@ app.post(
       errors.push("Ajoutez une icône ou une image pour l'expérience.");
     }
 
-    let positionValue;
-    const parsedPosition = Number.parseInt(rawPosition, 10);
-    if (Number.isInteger(parsedPosition)) {
-      positionValue = parsedPosition;
-    } else {
-      const { nextPosition } = db
-        .prepare('SELECT COALESCE(MAX(position), -1) + 1 AS nextPosition FROM experiences')
-        .get();
-      positionValue = Number.isInteger(nextPosition) ? nextPosition : 0;
-    }
+    const positionValue = experiencesService.computePosition(db, rawPosition);
 
     if (errors.length > 0) {
       if (newImagePath) {
@@ -753,15 +726,14 @@ app.post(
     }
 
     const {
-      title = '',
-      description = '',
-      icon = '',
       position: rawPosition = '',
       remove_image: removeImage = 'off',
     } = req.body;
-    const trimmedTitle = title.trim();
-    const trimmedDescription = description.trim();
-    const trimmedIcon = icon.trim();
+    const {
+      title: trimmedTitle,
+      description: trimmedDescription,
+      icon: trimmedIcon,
+    } = experiencesService.sanitizeExperiencePayload(req.body);
     const hasNewImage = Boolean(req.file);
     const uploadedImagePath = hasNewImage ? `/uploads/${req.file.filename}` : null;
     const willRemoveImage = removeImage === 'on';
@@ -786,13 +758,7 @@ app.post(
       errors.push("Ajoutez une icône ou une image pour l'expérience.");
     }
 
-    let positionValue;
-    const parsedPosition = Number.parseInt(rawPosition, 10);
-    if (Number.isInteger(parsedPosition)) {
-      positionValue = parsedPosition;
-    } else {
-      positionValue = Number.isInteger(existing.position) ? existing.position : 0;
-    }
+    const positionValue = experiencesService.computePosition(db, rawPosition, existing.position);
 
     if (errors.length > 0) {
       if (uploadedImagePath) {
