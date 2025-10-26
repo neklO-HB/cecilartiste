@@ -1,0 +1,38 @@
+<%- include('partials/header') %>
+<section class="contact-section">
+    <h1>Parlons de votre projet</h1>
+    <p>Que ce soit pour imaginer un reportage coloré, un portrait lumineux ou raconter votre histoire, je suis à votre écoute. Partagez-moi vos envies et nous construirons ensemble une expérience photographique unique.</p>
+
+    <% if (success) { %>
+        <div class="notice"><%= success %></div>
+    <% } else if (error) { %>
+        <div class="notice" role="alert"><%= error %></div>
+    <% } %>
+
+    <form class="contact-form" method="post" action="/contact">
+        <div>
+            <label for="name">Nom complet</label>
+            <input type="text" id="name" name="name" required value="<%= formData.name || '' %>">
+        </div>
+        <div>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required value="<%= formData.email || '' %>">
+        </div>
+        <div>
+            <label for="subject">Objet</label>
+            <select id="subject" name="subject">
+                <% ['Demande de devis', 'Rendez-vous téléphonique', 'Autres'].forEach(option => { %>
+                    <option value="<%= option %>" <%= formData.subject === option ? 'selected' : '' %>><%= option %></option>
+                <% }) %>
+            </select>
+        </div>
+        <div>
+            <label for="message">Message</label>
+            <textarea id="message" name="message" required><%= formData.message || '' %></textarea>
+        </div>
+        <button type="submit" class="button-primary">Envoyer</button>
+    </form>
+
+    <p class="contact-email">Ou écrivez directement à <strong><a href="mailto:<%= contactEmail %>"><%= contactEmail %></a></strong>.</p>
+</section>
+<%- include('partials/footer') %>

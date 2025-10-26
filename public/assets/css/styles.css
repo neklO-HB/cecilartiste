@@ -97,8 +97,26 @@ html.theme-aurora .site-header {
     transition: color var(--transition), transform var(--transition);
 }
 
+.main-nav__logout {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.main-nav__logout button {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font: inherit;
+    cursor: pointer;
+    transition: color var(--transition), transform var(--transition);
+    padding: 0;
+}
+
 .main-nav a:hover,
-.main-nav a:focus {
+.main-nav a:focus,
+.main-nav__logout button:hover,
+.main-nav__logout button:focus {
     color: var(--accent-color);
     transform: translateY(-2px);
 }

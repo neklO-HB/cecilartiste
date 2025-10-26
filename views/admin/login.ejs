@@ -1,0 +1,20 @@
+<%- include('../partials/header') %>
+<div class="login-wrapper">
+    <h1>Espace administration</h1>
+    <p>Connectez-vous pour gérer votre portfolio et vos messages.</p>
+    <% if (loginError) { %>
+        <div class="notice" role="alert"><%= loginError %></div>
+    <% } %>
+    <form method="post" class="admin-form" action="/admin/login">
+        <div>
+            <label for="username">Nom d'utilisateur</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="button-primary">Se connecter</button>
+    </form>
+</div>
+<%- include('../partials/footer') %>

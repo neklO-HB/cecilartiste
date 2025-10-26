@@ -1,3 +1,6 @@
-/data/*.sqlite
-/public/uploads/*
-!public/uploads/.gitkeep
+node_modules/
+.env
+npm-debug.log*
+yarn-error.log*
+data/
+.DS_Store
