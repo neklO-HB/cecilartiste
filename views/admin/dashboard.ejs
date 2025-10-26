@@ -11,10 +11,12 @@
 </header>
 
     <nav class="admin-shortcuts" aria-label="Navigation rapide">
-        <a class="button-secondary" href="#add-photo">Ajouter une photo</a>
-        <a class="button-secondary" href="#categories">Catégories</a>
-        <a class="button-secondary" href="#contact-settings">Contact</a>
-        <a class="button-secondary" href="#messages">Messages</a>
+        <button type="button" class="button-secondary" data-admin-target="add-photo">Ajouter une photo</button>
+        <button type="button" class="button-secondary" data-admin-target="photos">Vos photos</button>
+        <button type="button" class="button-secondary" data-admin-target="categories">Catégories</button>
+        <button type="button" class="button-secondary" data-admin-target="hero-intro">Présentation</button>
+        <button type="button" class="button-secondary" data-admin-target="contact-settings">Contact</button>
+        <button type="button" class="button-secondary" data-admin-target="messages">Messages</button>
     </nav>
 
     <% if (feedback) { %>
@@ -28,7 +30,7 @@
     <% } %>
 
     <div class="admin-grid">
-        <section class="admin-card" id="add-photo">
+        <section class="admin-card" id="add-photo" data-admin-section="add-photo">
             <h2>Ajouter une nouvelle photo</h2>
             <form class="admin-form" method="post" action="/admin/photos" enctype="multipart/form-data">
                 <div>
@@ -71,7 +73,28 @@
             </form>
         </section>
 
-        <section class="admin-card" id="contact-settings">
+        <section class="admin-card" id="hero-intro" data-admin-section="hero-intro">
+            <h2>Présentation «&nbsp;Qui suis-je&nbsp;?»</h2>
+            <p>Personnalisez le texte introductif visible en haut de la page d'accueil pour présenter votre univers.</p>
+            <form class="admin-form" method="post" action="/admin/hero-intro">
+                <div>
+                    <label for="hero_intro_heading">Titre court</label>
+                    <input type="text" id="hero_intro_heading" name="hero_intro_heading" required value="<%= heroIntro.heading %>">
+                </div>
+                <div>
+                    <label for="hero_intro_subheading">Titre principal</label>
+                    <input type="text" id="hero_intro_subheading" name="hero_intro_subheading" required value="<%= heroIntro.subheading %>">
+                </div>
+                <div>
+                    <label for="hero_intro_body">Texte de présentation</label>
+                    <textarea id="hero_intro_body" name="hero_intro_body" rows="5" required><%= heroIntro.body %></textarea>
+                    <small>Mettez en avant votre style, votre ancrage à Amiens et vos déplacements partout en France.</small>
+                </div>
+                <button type="submit" class="button-primary">Enregistrer</button>
+            </form>
+        </section>
+
+        <section class="admin-card" id="contact-settings" data-admin-section="contact-settings">
             <h2>Paramètres de contact</h2>
             <form class="admin-form" method="post" action="/admin/contact-email">
                 <div>
@@ -83,7 +106,7 @@
         </section>
     </div>
 
-    <section class="admin-card admin-card--wide" id="categories">
+    <section class="admin-card admin-card--wide" id="categories" data-admin-section="categories">
         <h2>Catégories du portfolio</h2>
         <p>Personnalisez les univers présentés sur la page d'accueil et assignez vos photos aux bonnes thématiques.</p>
         <div class="category-manager">
@@ -93,10 +116,6 @@
                     <div>
                         <label for="category_name">Nom</label>
                         <input type="text" id="category_name" name="name" required>
-                    </div>
-                    <div>
-                        <label for="category_description">Texte d'accroche</label>
-                        <textarea id="category_description" name="description" rows="3" placeholder="Décrivez l'univers de cette catégorie."></textarea>
                     </div>
                     <div>
                         <label for="category_position">Position</label>
@@ -132,10 +151,6 @@
                                             <input type="text" id="category_name_<%= category.id %>" name="name" required value="<%= category.name %>">
                                         </div>
                                         <div>
-                                            <label for="category_description_<%= category.id %>">Texte d'accroche</label>
-                                            <textarea id="category_description_<%= category.id %>" name="description" rows="3"><%= category.description || '' %></textarea>
-                                        </div>
-                                        <div>
                                             <label for="category_position_<%= category.id %>">Position</label>
                                             <input type="number" id="category_position_<%= category.id %>" name="position" value="<%= category.position %>">
                                         </div>
@@ -159,7 +174,7 @@
         </div>
     </section>
 
-    <section class="admin-card" id="photos">
+    <section class="admin-card" id="photos" data-admin-section="photos">
         <h2>Vos photos</h2>
         <% if (!photos || photos.length === 0) { %>
             <p>Aucune photo pour le moment. Ajoutez vos œuvres pour les voir apparaître ici.</p>
@@ -224,7 +239,7 @@
         <% } %>
     </section>
 
-    <section class="admin-card" id="messages">
+    <section class="admin-card" id="messages" data-admin-section="messages">
         <h2>Messages reçus</h2>
         <% if (!messages || messages.length === 0) { %>
             <p>Aucun message pour le moment.</p>
@@ -243,5 +258,56 @@
             </ul>
         <% } %>
     </section>
+    <script>
+        (function () {
+            const triggers = Array.from(document.querySelectorAll('[data-admin-target]'));
+            const sections = Array.from(document.querySelectorAll('[data-admin-section]'));
+
+            if (!triggers.length || !sections.length) {
+                return;
+            }
+
+            const sectionsById = new Map(sections.map(section => [section.dataset.adminSection, section]));
+
+            function activate(target, options) {
+                const { scroll = true } = options || {};
+                const activeSection = sectionsById.get(target);
+                if (!activeSection) {
+                    return;
+                }
+
+                sections.forEach(section => {
+                    section.hidden = section !== activeSection;
+                });
+
+                triggers.forEach(trigger => {
+                    trigger.classList.toggle('is-active', trigger.dataset.adminTarget === target);
+                });
+
+                if (window.location.hash !== `#${target}` && typeof history.replaceState === 'function') {
+                    history.replaceState(null, '', `#${target}`);
+                }
+
+                if (scroll) {
+                    activeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+
+            triggers.forEach(trigger => {
+                trigger.addEventListener('click', () => {
+                    activate(trigger.dataset.adminTarget, { scroll: true });
+                });
+            });
+
+            const initialHash = window.location.hash ? window.location.hash.substring(1) : '';
+            const initialTarget = sectionsById.has(initialHash)
+                ? initialHash
+                : triggers[0] && triggers[0].dataset.adminTarget;
+
+            if (initialTarget) {
+                activate(initialTarget, { scroll: false });
+            }
+        })();
+    </script>
 </section>
 <%- include('../partials/footer') %>
