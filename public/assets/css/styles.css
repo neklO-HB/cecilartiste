@@ -391,8 +391,8 @@ html.theme-aurora .site-header {
 
 .hero__mosaic {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.6rem;
     position: relative;
     align-content: start;
     margin-top: 0.5rem;
@@ -412,12 +412,15 @@ html.theme-aurora .site-header {
 .category-card {
     display: flex;
     flex-direction: column;
+    align-items: center;
     background: var(--card-background);
     border-radius: calc(var(--radius-large) + 6px);
     overflow: hidden;
     position: relative;
     box-shadow: var(--shadow-soft);
     transition: transform var(--transition);
+    min-height: clamp(360px, 38vw, 420px);
+    padding-bottom: 1.4rem;
 }
 
 .category-card:hover {
@@ -427,14 +430,30 @@ html.theme-aurora .site-header {
 .category-card__media {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 5 / 4;
+    width: 100%;
+    display: grid;
+    place-items: center;
 }
 
 .category-card__media img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     transition: transform 400ms ease;
+}
+
+.category-card__divider {
+    display: block;
+    width: clamp(140px, 50%, 220px);
+    height: 4px;
+    margin: 1.2rem auto 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-secondary), var(--accent-color));
+    background-size: 200% 100%;
+    animation: category-divider-glow 4.5s linear infinite;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.35);
 }
 
 .category-card:hover .category-card__media img {
@@ -457,20 +476,34 @@ html.theme-aurora .site-header {
 }
 
 .category-card__content {
-    padding: 1.6rem 1.8rem 2rem;
+    padding: 1.4rem 1.8rem 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    gap: 0.6rem;
 }
 
 .category-card__content h3 {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 1.35rem;
+    font-size: 1.5rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+}
+
+@keyframes category-divider-glow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+        box-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
+    }
+    100% {
+        background-position: 200% 50%;
+    }
 }
 
 .experience-ribbon {
@@ -1678,8 +1711,17 @@ html.theme-aurora .admin-photo-item {
         justify-content: center;
     }
 
+    .category-card {
+        min-height: 320px;
+        padding-bottom: 1.1rem;
+    }
+
     .category-card__media {
-        aspect-ratio: 3 / 2;
+        aspect-ratio: 4 / 3;
+    }
+
+    .category-card__divider {
+        margin-top: 1rem;
     }
 
     .experience-ribbon {
