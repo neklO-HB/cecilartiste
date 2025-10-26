@@ -7,6 +7,10 @@
             Je crée des expériences visuelles sur-mesure pour vos mariages, portraits et événements professionnels.
             Explorez mes séries et vivez l'énergie créative de chaque image.
         </p>
+        <div class="hero__cta">
+            <a class="button" href="#experiences">Explorer les expériences</a>
+            <a class="button button--ghost" href="/contact">Composer votre projet</a>
+        </div>
     </div>
     <div class="hero__mosaic">
         <% if (heroPhotos && heroPhotos.length > 0) { %>
@@ -25,6 +29,120 @@
             <% } %>
         <% } %>
     </div>
+</section>
+
+<section class="experience-ribbon" id="experiences" aria-label="Expériences photographiques proposées">
+    <div class="experience-ribbon__item reveal-on-scroll">
+        <span aria-hidden="true">&#128247;</span>
+        <div>
+            <h3>Reportages vibrants</h3>
+            <p>Saisir le mouvement, l'énergie et les couleurs intenses de vos événements artistiques.</p>
+        </div>
+    </div>
+    <div class="experience-ribbon__item reveal-on-scroll">
+        <span aria-hidden="true">&#127748;</span>
+        <div>
+            <h3>Portraits poétiques</h3>
+            <p>Composer des portraits sensibles inspirés par la lumière naturelle et la mise en scène.</p>
+        </div>
+    </div>
+    <div class="experience-ribbon__item reveal-on-scroll">
+        <span aria-hidden="true">&#127865;</span>
+        <div>
+            <h3>Univers de marque</h3>
+            <p>Construire des visuels signature pour révéler l'ADN coloré de votre entreprise.</p>
+        </div>
+    </div>
+</section>
+
+<section class="creative-services" aria-labelledby="creative-services-title">
+    <div class="creative-services__intro">
+        <h2 id="creative-services-title">Des créations sur mesure pour chaque émotion</h2>
+        <p>
+            Chaque séance est pensée comme un voyage chromatique. Nous construisons ensemble l'atmosphère, les textures
+            et les mouvements qui racontent votre histoire avec audace.
+        </p>
+    </div>
+    <div class="creative-services__grid">
+        <article class="creative-service reveal-on-scroll">
+            <span class="creative-service__icon" aria-hidden="true">&#128248;</span>
+            <h3>Editorial &amp; mode</h3>
+            <p>
+                Direction artistique, story-board et stylisme pour donner vie à vos campagnes et lookbooks avec une
+                touche cinématographique.
+            </p>
+            <ul class="creative-service__list">
+                <li>Direction artistique intégrale</li>
+                <li>Palette chromatique dédiée</li>
+                <li>Livraison optimisée print &amp; web</li>
+            </ul>
+        </article>
+        <article class="creative-service reveal-on-scroll">
+            <span class="creative-service__icon" aria-hidden="true">&#128141;</span>
+            <h3>Mariages &amp; cérémonies</h3>
+            <p>
+                Un accompagnement sensible, des préparatifs à la soirée, pour immortaliser vos émotions et créer une
+                narration lumineuse.
+            </p>
+            <ul class="creative-service__list">
+                <li>Repérage des lieux en amont</li>
+                <li>Photographies argentiques en option</li>
+                <li>Galerie privée et albums d'art</li>
+            </ul>
+        </article>
+        <article class="creative-service reveal-on-scroll">
+            <span class="creative-service__icon" aria-hidden="true">&#127912;</span>
+            <h3>Portraits signature</h3>
+            <p>
+                Des sessions individuelles ou en duo pour révéler votre singularité, entre jeux de lumière et textures
+                organiques.
+            </p>
+            <ul class="creative-service__list">
+                <li>Coaching poses &amp; expressions</li>
+                <li>Ambiance musicale personnalisée</li>
+                <li>Sélection d'accessoires et décors</li>
+            </ul>
+        </article>
+    </div>
+</section>
+
+<section class="process-section" aria-labelledby="process-title">
+    <div class="process-section__intro">
+        <h2 id="process-title">Mon approche en quatre temps</h2>
+        <p>
+            Une méthode artisanale alliant intuition et expertise technique pour des images à haute valeur émotionnelle.
+        </p>
+    </div>
+    <ol class="process-steps">
+        <li class="process-step reveal-on-scroll">
+            <span class="process-step__index">01</span>
+            <div>
+                <h3>Exploration des envies</h3>
+                <p>Entretien immersif, moodboard partagé et sélection d'ambiances chromatiques.</p>
+            </div>
+        </li>
+        <li class="process-step reveal-on-scroll">
+            <span class="process-step__index">02</span>
+            <div>
+                <h3>Préparation artistique</h3>
+                <p>Repérage des lieux, création de scénarios et préparation des accessoires signatures.</p>
+            </div>
+        </li>
+        <li class="process-step reveal-on-scroll">
+            <span class="process-step__index">03</span>
+            <div>
+                <h3>Prise de vue immersive</h3>
+                <p>Jeu de lumière, direction des corps et capture en numérique et argentique pour des rendus complémentaires.</p>
+            </div>
+        </li>
+        <li class="process-step reveal-on-scroll">
+            <span class="process-step__index">04</span>
+            <div>
+                <h3>Retouche coloristique</h3>
+                <p>Étalonnage chromatique, textures fines et préparation d'une galerie interactive sécurisée.</p>
+            </div>
+        </li>
+    </ol>
 </section>
 
 <% if (photos && photos.length > 0) { %>
@@ -56,6 +174,30 @@
 </section>
 <% } %>
 
+<section class="editorial-showcase" aria-labelledby="editorial-showcase-title">
+    <div class="editorial-showcase__intro">
+        <h2 id="editorial-showcase-title">Moodboard du moment</h2>
+        <p>
+            Une sélection d'inspirations issues de mes dernières explorations : reflets urbains, poésie florale et
+            portraits graphiques. Laissez-vous guider par ces univers pour imaginer votre propre série.
+        </p>
+    </div>
+    <div class="editorial-showcase__panels">
+        <article class="editorial-panel editorial-panel--glow reveal-on-scroll">
+            <div class="editorial-panel__label">Urbain chromatique</div>
+            <p>Reflets néon, vitrines et silhouettes en mouvement pour une narration électrique.</p>
+        </article>
+        <article class="editorial-panel editorial-panel--flora reveal-on-scroll">
+            <div class="editorial-panel__label">Floraison poétique</div>
+            <p>Textures organiques, pétales en macro et lumière diffuse pour un rendu onirique.</p>
+        </article>
+        <article class="editorial-panel editorial-panel--portrait reveal-on-scroll">
+            <div class="editorial-panel__label">Portraits graphiques</div>
+            <p>Jeux d'ombres, lignes architecturales et palette contrastée pour révéler chaque personnalité.</p>
+        </article>
+    </div>
+</section>
+
 <section class="gallery-section">
     <div class="gallery-header">
         <h2>Collections Signature</h2>
@@ -83,6 +225,35 @@
                 <strong>Votre galerie est prête&nbsp;!</strong> Ajoutez vos premières photos via l'espace d'administration pour révéler votre univers à vos visiteurs.
             </div>
         <% } %>
+    </div>
+</section>
+
+<section class="studio-insights" aria-labelledby="studio-insights-title">
+    <div class="studio-insights__intro">
+        <h2 id="studio-insights-title">Le studio en chiffres</h2>
+        <p>Des collaborations fidèles et une recherche constante de nouvelles palettes pour magnifier vos projets.</p>
+    </div>
+    <dl class="studio-insights__grid">
+        <div class="studio-insight reveal-on-scroll" data-count="12">
+            <dt>12</dt>
+            <dd>années de reportages et de créations sur-mesure</dd>
+        </div>
+        <div class="studio-insight reveal-on-scroll" data-count="180">
+            <dt>180</dt>
+            <dd>clients accompagnés entre Paris, Lyon et Montréal</dd>
+        </div>
+        <div class="studio-insight reveal-on-scroll" data-count="3200">
+            <dt>3200</dt>
+            <dd>photographies livrées avec retouches colorimétriques</dd>
+        </div>
+        <div class="studio-insight reveal-on-scroll" data-count="28">
+            <dt>28</dt>
+            <dd>expositions collectives &amp; installations artistiques</dd>
+        </div>
+    </dl>
+    <div class="studio-insights__cta">
+        <p>Envie d'écrire votre histoire visuelle&nbsp;? Partagez votre projet et construisons un univers qui vous ressemble.</p>
+        <a class="button" href="/contact">Parler de votre projet</a>
     </div>
 </section>
 <%- include('partials/footer') %>
