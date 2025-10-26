@@ -1,0 +1,37 @@
+<?php
+declare(strict_types=1);
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cécile'Artiste – Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <script>
+        (function() {
+            const stored = localStorage.getItem('cecile-theme');
+            if (stored) {
+                document.documentElement.classList.add('theme-' + stored);
+            } else {
+                document.documentElement.classList.add('theme-vibrant');
+            }
+        })();
+    </script>
+</head>
+<body>
+<header class="site-header">
+    <div class="branding">
+        <span class="logo">Cécile'<span>Artiste</span></span>
+        <p class="tagline">Photographe de moments vibrants &amp; poétiques</p>
+    </div>
+    <nav class="main-nav">
+        <a href="/index.php">Accueil</a>
+        <a href="/contact.php">Contact</a>
+        <a class="admin-link" href="/admin.php" aria-label="Administration">Admin</a>
+    </nav>
+</header>
+<main class="site-content">
