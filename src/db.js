@@ -47,6 +47,14 @@ const migrations = [
     accent_color TEXT DEFAULT '#ff6f61',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    hero_image_path TEXT,
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     contact_email TEXT NOT NULL
@@ -60,7 +68,8 @@ const migrations = [
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE INDEX IF NOT EXISTS idx_photos_created_at ON photos(created_at DESC)`,
-  `CREATE INDEX IF NOT EXISTS idx_messages_created_at ON contact_messages(created_at DESC)`
+  `CREATE INDEX IF NOT EXISTS idx_messages_created_at ON contact_messages(created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_categories_position ON categories(position ASC, name ASC)`
 ];
 
 function prepareDatabase() {
@@ -68,9 +77,37 @@ function prepareDatabase() {
     db.exec(sql);
   });
 
+  const photoColumns = db.prepare('PRAGMA table_info(photos)').all();
+  const hasCategoryColumn = photoColumns.some(column => column.name === 'category_id');
+  if (!hasCategoryColumn) {
+    db.exec('ALTER TABLE photos ADD COLUMN category_id INTEGER REFERENCES categories(id)');
+  }
+
   db.prepare('INSERT OR IGNORE INTO settings (id, contact_email) VALUES (1, ?)').run(
-    'contact@cecileartiste.com'
+    'contact@cecilartiste.com'
   );
+
+  const defaultCategories = [
+    'Mariage',
+    'Baptême',
+    'Anniversaire',
+    'Grossesse',
+    'Nouveau-né',
+    'Autres'
+  ];
+
+  defaultCategories.forEach((name, index) => {
+    const existing = db.prepare('SELECT id FROM categories WHERE name = ?').get(name);
+    if (!existing) {
+      db.prepare(
+        'INSERT INTO categories (name, description, position) VALUES (?, ?, ?)'
+      ).run(
+        name,
+        `Personnalisez votre texte pour la catégorie ${name.toLowerCase()} depuis l\'espace d\'administration.`,
+        index
+      );
+    }
+  });
 }
 
 prepareDatabase();

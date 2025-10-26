@@ -8,11 +8,11 @@ async function main() {
     .prepare(
       'SELECT id, password_hash FROM users WHERE LOWER(TRIM(username)) = LOWER(TRIM(?))'
     )
-    .get('Cecile');
+    .get('Cecil');
 
   if (!adminUser) {
     const passwordHash = hashPassword('Nicolas 0712!');
-    db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run('Cecile', passwordHash);
+    db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run('Cecil', passwordHash);
     console.log("Utilisateur d'administration créé.");
   } else if (!String(adminUser.password_hash || '').startsWith(HASH_PREFIX)) {
     const passwordHash = hashPassword('Nicolas 0712!');
