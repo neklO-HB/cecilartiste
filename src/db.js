@@ -124,7 +124,7 @@ function prepareDatabase() {
   );
 
   db.prepare(
-    'UPDATE settings SET hero_intro_heading = COALESCE(NULLIF(TRIM(hero_intro_heading), ""), ?), hero_intro_subheading = COALESCE(NULLIF(TRIM(hero_intro_subheading), ""), ?), hero_intro_body = COALESCE(NULLIF(TRIM(hero_intro_body), ""), ?) WHERE id = 1'
+    "UPDATE settings SET hero_intro_heading = COALESCE(NULLIF(TRIM(hero_intro_heading), ''), ?), hero_intro_subheading = COALESCE(NULLIF(TRIM(hero_intro_subheading), ''), ?), hero_intro_body = COALESCE(NULLIF(TRIM(hero_intro_body), ''), ?) WHERE id = 1"
   ).run(heroDefaults.heading.trim(), heroDefaults.subheading, heroDefaults.body);
 
   const defaultCategories = [
