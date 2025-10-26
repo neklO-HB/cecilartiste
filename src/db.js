@@ -1,6 +1,14 @@
 const path = require('path');
 const fs = require('fs');
-const Database = require('better-sqlite3');
+let DatabaseConstructor;
+let usingBetterSqlite = false;
+
+try {
+  DatabaseConstructor = require('better-sqlite3');
+  usingBetterSqlite = true;
+} catch (error) {
+  ({ DatabaseSync: DatabaseConstructor } = require('node:sqlite'));
+}
 
 const dbPath = path.join(__dirname, '..', 'data', 'cecilartiste.sqlite');
 const dbDir = path.dirname(dbPath);
@@ -9,10 +17,19 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
-db.pragma('busy_timeout = 5000');
-db.pragma('foreign_keys = ON');
+const db = new DatabaseConstructor(dbPath);
+
+function runPragma(statement) {
+  if (usingBetterSqlite && typeof db.pragma === 'function') {
+    db.pragma(statement);
+  } else {
+    db.exec(`PRAGMA ${statement}`);
+  }
+}
+
+runPragma('journal_mode = WAL');
+runPragma('busy_timeout = 5000');
+runPragma('foreign_keys = ON');
 
 const migrations = [
   `CREATE TABLE IF NOT EXISTS users (
@@ -56,7 +73,6 @@ function prepareDatabase() {
   );
 }
 
-db.function('lower_trim', (value = '') => String(value).trim().toLowerCase());
 prepareDatabase();
 
 module.exports = db;

@@ -2,8 +2,8 @@ const path = require('path');
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
-const bcrypt = require('bcryptjs');
 const db = require('./src/db');
+const { verifyPassword } = require('./src/passwords');
 const {
   ensureUploadDir,
   formatDate,
@@ -205,10 +205,12 @@ app.post(
   asyncHandler(async (req, res) => {
     const { username = '', password = '' } = req.body;
     const user = db
-      .prepare('SELECT id, username, password_hash FROM users WHERE lower_trim(username) = lower_trim(?)')
+      .prepare(
+        'SELECT id, username, password_hash FROM users WHERE LOWER(TRIM(username)) = LOWER(TRIM(?))'
+      )
       .get(username);
 
-    if (user && bcrypt.compareSync(password, user.password_hash)) {
+    if (user && verifyPassword(password, user.password_hash)) {
       req.session.user = { id: user.id, username: user.username };
       return res.redirect('/admin');
     }
