@@ -5,25 +5,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const root = document.documentElement;
-    const THEMES = ['vibrant', 'aurora'];
+    const valueLabel = switcher.querySelector('.theme-switch__value');
+    const THEMES = [
+        { id: 'vibrant', label: 'Vibrant' },
+        { id: 'aurora', label: 'Aurora' },
+        { id: 'nocturne', label: 'Nocturne' },
+        { id: 'solaire', label: 'Solaire' }
+    ];
+    const transitionDuration = 650;
 
-    function applyTheme(theme) {
-        THEMES.forEach(t => root.classList.remove('theme-' + t));
-        root.classList.add('theme-' + theme);
-        localStorage.setItem('cecile-theme', theme);
+    function updateLabel(themeId) {
+        if (!valueLabel) {
+            return;
+        }
+        const theme = THEMES.find(t => t.id === themeId);
+        valueLabel.textContent = theme ? theme.label : themeId;
+    }
+
+    function applyTheme(themeId, { persist = true, animate = true } = {}) {
+        const availableThemes = THEMES.map(theme => theme.id);
+        if (!availableThemes.includes(themeId)) {
+            themeId = THEMES[0].id;
+        }
+
+        if (animate) {
+            root.classList.add('theme-transition');
+            switcher.classList.add('theme-switch--animating');
+            window.setTimeout(() => {
+                root.classList.remove('theme-transition');
+                switcher.classList.remove('theme-switch--animating');
+            }, transitionDuration);
+        }
+
+        availableThemes.forEach(theme => root.classList.remove('theme-' + theme));
+        root.classList.add('theme-' + themeId);
+        switcher.setAttribute('data-theme', themeId);
+        updateLabel(themeId);
+
+        if (persist) {
+            localStorage.setItem('cecile-theme', themeId);
+        }
     }
 
     const stored = localStorage.getItem('cecile-theme');
-    if (stored && THEMES.includes(stored)) {
-        applyTheme(stored);
-        switcher.classList.toggle('theme-switch--alt', stored !== THEMES[0]);
+    if (stored) {
+        applyTheme(stored, { animate: false });
+    } else {
+        const current = THEMES.find(theme => root.classList.contains('theme-' + theme.id));
+        applyTheme(current ? current.id : THEMES[0].id, { animate: false, persist: false });
     }
 
     switcher.addEventListener('click', () => {
-        const current = THEMES.find(theme => root.classList.contains('theme-' + theme)) || THEMES[0];
-        const currentIndex = THEMES.indexOf(current);
+        const activeTheme = THEMES.find(theme => root.classList.contains('theme-' + theme.id)) || THEMES[0];
+        const currentIndex = THEMES.indexOf(activeTheme);
         const nextTheme = THEMES[(currentIndex + 1) % THEMES.length];
-        applyTheme(nextTheme);
-        switcher.classList.toggle('theme-switch--alt', nextTheme !== THEMES[0]);
+        applyTheme(nextTheme.id);
     });
 });

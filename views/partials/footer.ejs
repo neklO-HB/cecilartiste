@@ -2,8 +2,10 @@
 <footer class="site-footer">
     <p>&copy; <%= new Date().getFullYear() %> Cécile'Artiste. Tous droits réservés.</p>
 </footer>
-<button class="theme-switch" id="theme-switch" aria-label="Changer de thème">
-    <span class="theme-switch__label">Palette</span>
+<button class="theme-switch" id="theme-switch" aria-label="Changer de thème" data-theme="vibrant">
+    <span class="theme-switch__label">Palette
+        <span class="theme-switch__value" aria-live="polite" aria-atomic="true">Vibrant</span>
+    </span>
     <span class="theme-switch__circle"></span>
 </button>
 <script src="/assets/js/theme-toggle.js"></script>
