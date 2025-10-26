@@ -86,6 +86,19 @@ function photoUpload(field) {
   };
 }
 
+function optionalUpload(field, redirectHash = '') {
+  return (req, res, next) => {
+    upload.single(field)(req, res, err => {
+      if (err) {
+        req.session.flash = { errors: [err.message] };
+        const anchor = redirectHash ? `#${redirectHash}` : '';
+        return res.redirect(`/admin${anchor}`);
+      }
+      return next();
+    });
+  };
+}
+
 function uploadAndHandle(field, handler) {
   return (req, res, next) => {
     upload.single(field)(req, res, err => {
@@ -126,6 +139,15 @@ app.get(
         ...category,
         hero_image_path: normalizePublicPath(category.hero_image_path),
       }));
+    const experiences = db
+      .prepare(
+        'SELECT id, title, description, icon, image_path FROM experiences ORDER BY position ASC, id ASC'
+      )
+      .all()
+      .map(experience => ({
+        ...experience,
+        image_path: normalizePublicPath(experience.image_path),
+      }));
     const heroSettings = db
       .prepare(
         'SELECT hero_intro_heading, hero_intro_subheading, hero_intro_body FROM settings WHERE id = 1'
@@ -144,6 +166,7 @@ app.get(
       photos,
       categories,
       heroIntro,
+      experiences,
     });
   })
 );
@@ -264,6 +287,15 @@ app.get(
         ...category,
         hero_image_path: normalizePublicPath(category.hero_image_path),
       }));
+    const experiences = db
+      .prepare(
+        'SELECT id, title, description, icon, image_path, position FROM experiences ORDER BY position ASC, id ASC'
+      )
+      .all()
+      .map(experience => ({
+        ...experience,
+        image_path: normalizePublicPath(experience.image_path),
+      }));
     const settings = db
       .prepare(
         'SELECT contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body FROM settings WHERE id = 1'
@@ -288,6 +320,7 @@ app.get(
     return res.render('admin/dashboard', {
       photos,
       categories,
+      experiences,
       contactEmail,
       heroIntro,
       messages,
@@ -638,6 +671,179 @@ app.post(
     }
 
     return res.redirect('/admin#categories');
+  })
+);
+
+app.post(
+  '/admin/experiences',
+  requireAuth,
+  optionalUpload('image', 'experiences'),
+  asyncHandler(async (req, res) => {
+    const {
+      title = '',
+      description = '',
+      icon = '',
+      position: rawPosition = '',
+    } = req.body;
+    const trimmedTitle = title.trim();
+    const trimmedDescription = description.trim();
+    const trimmedIcon = icon.trim();
+    const hasImage = Boolean(req.file);
+    const newImagePath = hasImage ? `/uploads/${req.file.filename}` : null;
+    const errors = [];
+
+    if (!trimmedTitle) {
+      errors.push("Le titre de l'expérience est requis.");
+    }
+
+    if (!trimmedDescription) {
+      errors.push("La description de l'expérience est requise.");
+    }
+
+    if (!trimmedIcon && !hasImage) {
+      errors.push("Ajoutez une icône ou une image pour l'expérience.");
+    }
+
+    let positionValue;
+    const parsedPosition = Number.parseInt(rawPosition, 10);
+    if (Number.isInteger(parsedPosition)) {
+      positionValue = parsedPosition;
+    } else {
+      const { nextPosition } = db
+        .prepare('SELECT COALESCE(MAX(position), -1) + 1 AS nextPosition FROM experiences')
+        .get();
+      positionValue = Number.isInteger(nextPosition) ? nextPosition : 0;
+    }
+
+    if (errors.length > 0) {
+      if (newImagePath) {
+        deleteFileIfExists(newImagePath);
+      }
+      req.session.flash = { errors };
+      return res.redirect('/admin#experiences');
+    }
+
+    db.prepare(
+      'INSERT INTO experiences (title, description, icon, image_path, position) VALUES (?, ?, ?, ?, ?)'
+    ).run(trimmedTitle, trimmedDescription, trimmedIcon || null, newImagePath, positionValue);
+
+    req.session.flash = { success: "L'expérience a été ajoutée avec succès." };
+    return res.redirect('/admin#experiences');
+  })
+);
+
+app.post(
+  '/admin/experiences/:id',
+  requireAuth,
+  optionalUpload('image', 'experiences'),
+  asyncHandler(async (req, res) => {
+    const experienceId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(experienceId)) {
+      req.session.flash = { errors: ["L'expérience demandée est introuvable."] };
+      return res.redirect('/admin#experiences');
+    }
+
+    const existing = db
+      .prepare('SELECT id, image_path, position FROM experiences WHERE id = ?')
+      .get(experienceId);
+
+    if (!existing) {
+      req.session.flash = { errors: ["L'expérience demandée est introuvable."] };
+      return res.redirect('/admin#experiences');
+    }
+
+    const {
+      title = '',
+      description = '',
+      icon = '',
+      position: rawPosition = '',
+      remove_image: removeImage = 'off',
+    } = req.body;
+    const trimmedTitle = title.trim();
+    const trimmedDescription = description.trim();
+    const trimmedIcon = icon.trim();
+    const hasNewImage = Boolean(req.file);
+    const uploadedImagePath = hasNewImage ? `/uploads/${req.file.filename}` : null;
+    const willRemoveImage = removeImage === 'on';
+    const errors = [];
+
+    if (!trimmedTitle) {
+      errors.push("Le titre de l'expérience est requis.");
+    }
+
+    if (!trimmedDescription) {
+      errors.push("La description de l'expérience est requise.");
+    }
+
+    let finalImagePath = existing.image_path;
+    if (hasNewImage) {
+      finalImagePath = uploadedImagePath;
+    } else if (willRemoveImage) {
+      finalImagePath = null;
+    }
+
+    if (!trimmedIcon && !finalImagePath) {
+      errors.push("Ajoutez une icône ou une image pour l'expérience.");
+    }
+
+    let positionValue;
+    const parsedPosition = Number.parseInt(rawPosition, 10);
+    if (Number.isInteger(parsedPosition)) {
+      positionValue = parsedPosition;
+    } else {
+      positionValue = Number.isInteger(existing.position) ? existing.position : 0;
+    }
+
+    if (errors.length > 0) {
+      if (uploadedImagePath) {
+        deleteFileIfExists(uploadedImagePath);
+      }
+      req.session.flash = { errors };
+      return res.redirect('/admin#experiences');
+    }
+
+    db.prepare(
+      'UPDATE experiences SET title = ?, description = ?, icon = ?, image_path = ?, position = ? WHERE id = ?'
+    ).run(trimmedTitle, trimmedDescription, trimmedIcon || null, finalImagePath, positionValue, experienceId);
+
+    if (hasNewImage && existing.image_path && existing.image_path !== finalImagePath) {
+      deleteFileIfExists(existing.image_path);
+    } else if (willRemoveImage && existing.image_path) {
+      deleteFileIfExists(existing.image_path);
+    }
+
+    req.session.flash = { success: "L'expérience a été mise à jour." };
+    return res.redirect('/admin#experiences');
+  })
+);
+
+app.post(
+  '/admin/experiences/:id/delete',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const experienceId = Number.parseInt(req.params.id, 10);
+    if (!Number.isInteger(experienceId)) {
+      req.session.flash = { errors: ["L'expérience demandée est introuvable."] };
+      return res.redirect('/admin#experiences');
+    }
+
+    const existing = db
+      .prepare('SELECT image_path FROM experiences WHERE id = ?')
+      .get(experienceId);
+
+    if (!existing) {
+      req.session.flash = { errors: ["L'expérience demandée est introuvable."] };
+      return res.redirect('/admin#experiences');
+    }
+
+    db.prepare('DELETE FROM experiences WHERE id = ?').run(experienceId);
+
+    if (existing.image_path) {
+      deleteFileIfExists(existing.image_path);
+    }
+
+    req.session.flash = { success: "L'expérience a été supprimée." };
+    return res.redirect('/admin#experiences');
   })
 );
 

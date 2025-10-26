@@ -61,27 +61,42 @@
 </section>
 
 <section class="experience-ribbon" id="experiences" aria-label="Expériences photographiques proposées">
-    <div class="experience-ribbon__item reveal-on-scroll">
-        <span aria-hidden="true">&#128247;</span>
-        <div>
-            <h3>Reportages vibrants</h3>
-            <p>Saisir le mouvement, l'énergie et les couleurs intenses de vos événements artistiques.</p>
-        </div>
-    </div>
-    <div class="experience-ribbon__item reveal-on-scroll">
-        <span aria-hidden="true">&#127748;</span>
-        <div>
-            <h3>Portraits poétiques</h3>
-            <p>Composer des portraits sensibles inspirés par la lumière naturelle et la mise en scène.</p>
-        </div>
-    </div>
-    <div class="experience-ribbon__item reveal-on-scroll">
-        <span aria-hidden="true">&#127865;</span>
-        <div>
-            <h3>Univers de marque</h3>
-            <p>Construire des visuels signature pour révéler l'ADN coloré de votre entreprise.</p>
-        </div>
-    </div>
+    <% if (experiences && experiences.length) { %>
+        <% experiences.forEach(experience => { %>
+            <article class="experience-ribbon__item reveal-on-scroll">
+                <div class="experience-ribbon__media">
+                    <% if (experience.image_path) { %>
+                        <img src="<%= experience.image_path %>" alt="Illustration pour <%= experience.title %>">
+                    <% } else if (experience.icon) { %>
+                        <span class="experience-ribbon__icon" aria-hidden="true"><%= experience.icon %></span>
+                    <% } else { %>
+                        <span class="experience-ribbon__icon" aria-hidden="true">&#10024;</span>
+                    <% } %>
+                </div>
+                <div class="experience-ribbon__content">
+                    <h3><%= experience.title %></h3>
+                    <p><%- nl2br(experience.description) %></p>
+                </div>
+            </article>
+        <% }) %>
+    <% } else { %>
+        <% const defaultExperiences = [
+            { icon: '&#128247;', title: 'Reportages vibrants', description: "Saisir le mouvement, l'énergie et les couleurs intenses de vos événements artistiques." },
+            { icon: '&#127748;', title: 'Portraits poétiques', description: 'Composer des portraits sensibles inspirés par la lumière naturelle et la mise en scène.' },
+            { icon: '&#127865;', title: 'Univers de marque', description: "Construire des visuels signature pour révéler l'ADN coloré de votre entreprise." }
+        ]; %>
+        <% defaultExperiences.forEach(experience => { %>
+            <article class="experience-ribbon__item reveal-on-scroll">
+                <div class="experience-ribbon__media">
+                    <span class="experience-ribbon__icon" aria-hidden="true"><%- experience.icon %></span>
+                </div>
+                <div class="experience-ribbon__content">
+                    <h3><%= experience.title %></h3>
+                    <p><%= experience.description %></p>
+                </div>
+            </article>
+        <% }) %>
+    <% } %>
 </section>
 
 <section class="creative-services" aria-labelledby="creative-services-title">
