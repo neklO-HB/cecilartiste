@@ -1,0 +1,142 @@
+<%- include('../partials/header') %>
+<section class="admin-container">
+    <header class="gallery-header">
+        <div>
+            <h1>Administration du portfolio</h1>
+            <p>Connectée en tant que <%= currentUser ? currentUser.username : 'Cécile' %>. Gérez vos images et votre email de contact en toute simplicité.</p>
+        </div>
+        <form action="/admin/logout" method="post">
+            <button type="submit" class="button-secondary">Se déconnecter</button>
+        </form>
+    </header>
+
+    <% if (feedback) { %>
+        <div class="notice"><%= feedback %></div>
+    <% } %>
+
+    <% if (errors && errors.length) { %>
+        <% errors.forEach(error => { %>
+            <div class="notice" role="alert"><%= error %></div>
+        <% }) %>
+    <% } %>
+
+    <div class="admin-grid">
+        <section class="admin-card">
+            <h2>Ajouter une nouvelle photo</h2>
+            <form class="admin-form" method="post" action="/admin/photos" enctype="multipart/form-data">
+                <div>
+                    <label for="title">Titre</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div>
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" placeholder="Décrivez l'histoire derrière cette image..."></textarea>
+                </div>
+                <div>
+                    <label for="palette">Palette</label>
+                    <select id="palette" name="palette">
+                        <option value="vibrant">Vibrant</option>
+                        <option value="aurora">Aurora</option>
+                        <option value="nocturne">Nocturne</option>
+                        <option value="solaire">Solaire</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="accent_color">Couleur d'accent</label>
+                    <input type="color" id="accent_color" name="accent_color" value="#ff6f61">
+                </div>
+                <div>
+                    <label for="photo">Image</label>
+                    <input type="file" id="photo" name="photo" accept="image/*" required>
+                </div>
+                <button type="submit" class="button-primary">Ajouter</button>
+            </form>
+        </section>
+
+        <section class="admin-card">
+            <h2>Paramètres de contact</h2>
+            <form class="admin-form" method="post" action="/admin/contact-email">
+                <div>
+                    <label for="contact_email">Email destinataire</label>
+                    <input type="email" id="contact_email" name="contact_email" required value="<%= contactEmail %>">
+                </div>
+                <button type="submit" class="button-primary">Mettre à jour</button>
+            </form>
+        </section>
+    </div>
+
+    <section class="admin-card">
+        <h2>Vos photos</h2>
+        <% if (!photos || photos.length === 0) { %>
+            <p>Aucune photo pour le moment. Ajoutez vos œuvres pour les voir apparaître ici.</p>
+        <% } else { %>
+            <% const palettes = { vibrant: 'Vibrant', aurora: 'Aurora', nocturne: 'Nocturne', solaire: 'Solaire' }; %>
+            <div class="admin-photos">
+                <% photos.forEach(photo => { %>
+                    <article class="admin-photo-item">
+                        <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
+                        <div>
+                            <h3><%= photo.title %></h3>
+                            <% if (photo.description) { %>
+                                <p><%- nl2br(photo.description) %></p>
+                            <% } %>
+                            <form class="admin-form" method="post" action="/admin/photos/<%= photo.id %>" enctype="multipart/form-data">
+                                <div>
+                                    <label for="title_<%= photo.id %>">Titre</label>
+                                    <input type="text" id="title_<%= photo.id %>" name="title" required value="<%= photo.title %>">
+                                </div>
+                                <div>
+                                    <label for="description_<%= photo.id %>">Description</label>
+                                    <textarea id="description_<%= photo.id %>" name="description" rows="3"><%= photo.description || '' %></textarea>
+                                </div>
+                                <div>
+                                    <label for="palette_<%= photo.id %>">Palette</label>
+                                    <select id="palette_<%= photo.id %>" name="palette">
+                                        <% Object.entries(palettes).forEach(([value, label]) => { %>
+                                            <option value="<%= value %>" <%= photo.palette === value ? 'selected' : '' %>><%= label %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="accent_<%= photo.id %>">Couleur d'accent</label>
+                                    <input type="color" id="accent_<%= photo.id %>" name="accent_color" value="<%= photo.accent_color || '#ff6f61' %>">
+                                </div>
+                                <div>
+                                    <label for="photo_<%= photo.id %>">Remplacer l'image</label>
+                                    <input type="file" id="photo_<%= photo.id %>" name="photo" accept="image/*">
+                                </div>
+                                <div class="admin-photo-actions">
+                                    <button type="submit" class="button-secondary">Enregistrer</button>
+                                </div>
+                            </form>
+                            <form class="admin-form admin-form--delete" method="post" action="/admin/photos/<%= photo.id %>/delete" onsubmit="return confirm('Supprimer cette photo ?');">
+                                <button type="submit" class="button-danger">Supprimer</button>
+                            </form>
+                        </div>
+                    </article>
+                <% }) %>
+            </div>
+        <% } %>
+    </section>
+
+    <section class="admin-card">
+        <h2>Messages reçus</h2>
+        <% if (!messages || messages.length === 0) { %>
+            <p>Aucun message pour le moment.</p>
+        <% } else { %>
+            <ul class="admin-messages">
+                <% messages.forEach(message => { %>
+                    <li>
+                        <header>
+                            <strong><%= message.name %></strong> – <a href="mailto:<%= message.email %>"><%= message.email %></a>
+                            <span class="admin-message-date"><%= formatDate(message.created_at) %></span>
+                        </header>
+                        <p class="admin-message-subject"><strong>Objet :</strong> <%= message.subject %></p>
+                        <p><%- nl2br(message.message) %></p>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } %>
+    </section>
+</section>
+<%- include('../partials/footer') %>

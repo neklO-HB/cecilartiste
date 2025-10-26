@@ -1,0 +1,59 @@
+<%- include('partials/header') %>
+<section class="hero">
+    <div class="hero__intro">
+        <h1>Capturer l'éclat de vos histoires</h1>
+        <p>
+            Bienvenue dans l'univers de Cécile'Artiste, photographe passionnée par les couleurs et les émotions.
+            Je crée des expériences visuelles sur-mesure pour vos mariages, portraits et événements professionnels.
+            Explorez mes séries et vivez l'énergie créative de chaque image.
+        </p>
+    </div>
+    <div class="hero__mosaic">
+        <% if (heroPhotos && heroPhotos.length > 0) { %>
+            <% heroPhotos.forEach(photo => { %>
+                <figure>
+                    <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
+                    <figcaption><%= photo.title %></figcaption>
+                </figure>
+            <% }) %>
+        <% } else { %>
+            <% for (let i = 0; i < 6; i += 1) { %>
+                <figure>
+                    <div class="placeholder" style="background: linear-gradient(135deg, var(--accent-color), var(--accent-secondary)); height: 140px;"></div>
+                    <figcaption>Votre image ici</figcaption>
+                </figure>
+            <% } %>
+        <% } %>
+    </div>
+</section>
+
+<section class="gallery-section">
+    <div class="gallery-header">
+        <h2>Collections Signature</h2>
+        <p>Des instants en couleur, façonnés par la lumière. Faites défiler les séries pour découvrir le style de Cécile'Artiste et imaginez vos propres souvenirs capturés avec audace.</p>
+    </div>
+    <div class="gallery-grid">
+        <% if (photos && photos.length > 0) { %>
+            <% photos.forEach(photo => { %>
+                <article class="photo-card" style="--photo-accent: <%= photo.accent_color || '#ff6f61' %>;">
+                    <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
+                    <div class="photo-card__info">
+                        <h3><%= photo.title %></h3>
+                        <% if (photo.description) { %>
+                            <p><%- nl2br(photo.description) %></p>
+                        <% } %>
+                    </div>
+                    <div class="photo-card__tags">
+                        <span class="photo-card__tag">Palette <%= (photo.palette || '').charAt(0).toUpperCase() + (photo.palette || '').slice(1) %></span>
+                        <span class="photo-card__tag">Créée le <%= formatDate(photo.created_at) %></span>
+                    </div>
+                </article>
+            <% }) %>
+        <% } else { %>
+            <div class="notice">
+                <strong>Votre galerie est prête&nbsp;!</strong> Ajoutez vos premières photos via l'espace d'administration pour révéler votre univers à vos visiteurs.
+            </div>
+        <% } %>
+    </div>
+</section>
+<%- include('partials/footer') %>
