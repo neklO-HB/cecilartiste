@@ -27,6 +27,35 @@
     </div>
 </section>
 
+<% if (photos && photos.length > 0) { %>
+<section class="photo-viewer" aria-label="Visionneuse immersive">
+    <div class="photo-viewer__header">
+        <h2>Visionneuse immersive</h2>
+        <p>
+            Faites défiler les images en plein écran pour ressentir la couleur, la matière et les détails de chaque série.
+            Glissez pour voyager d'une ambiance à l'autre.
+        </p>
+    </div>
+    <div class="photo-viewer__carousel">
+        <% photos.forEach(photo => { %>
+            <figure class="photo-viewer__item" style="--photo-accent: <%= photo.accent_color || '#ff6f61' %>;">
+                <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
+                <figcaption class="photo-viewer__caption">
+                    <h3><%= photo.title %></h3>
+                    <% if (photo.description) { %>
+                        <p><%- nl2br(photo.description) %></p>
+                    <% } %>
+                    <div class="photo-viewer__meta">
+                        <span class="photo-viewer__meta-item">Palette <%= (photo.palette || '').charAt(0).toUpperCase() + (photo.palette || '').slice(1) %></span>
+                        <span class="photo-viewer__meta-item">Créée le <%= formatDate(photo.created_at) %></span>
+                    </div>
+                </figcaption>
+            </figure>
+        <% }) %>
+    </div>
+</section>
+<% } %>
+
 <section class="gallery-section">
     <div class="gallery-header">
         <h2>Collections Signature</h2>
