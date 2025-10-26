@@ -11,6 +11,7 @@ const {
   deleteFileIfExists,
   normalizePublicPath,
 } = require('./src/utils');
+const mailer = require('./src/mailer');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -136,7 +137,9 @@ app.get(
   '/contact',
   asyncHandler(async (req, res) => {
     const settings = db.prepare('SELECT contact_email FROM settings WHERE id = 1').get();
-    const contactEmail = settings ? settings.contact_email : 'contact@cecilartiste.com';
+    const contactEmail = settings && settings.contact_email
+      ? settings.contact_email.trim()
+      : 'contact@cecilartiste.com';
     const { success = null, error = null, formData = {} } = res.locals.flash;
     res.render('contact', {
       contactEmail,
@@ -157,9 +160,19 @@ app.post(
   '/contact',
   asyncHandler(async (req, res) => {
     const { name = '', email = '', subject = 'Autres', message = '' } = req.body;
-    const formData = { name, email, subject, message };
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedSubject = subject.trim() || 'Autres';
+    const trimmedMessage = message.trim();
 
-    if (!name.trim() || !email.trim() || !message.trim()) {
+    const formData = {
+      name: trimmedName,
+      email: trimmedEmail,
+      subject: trimmedSubject,
+      message: trimmedMessage,
+    };
+
+    if (!trimmedName || !trimmedEmail || !trimmedMessage) {
       req.session.flash = {
         error: 'Merci de renseigner votre nom, email et message.',
         formData,
@@ -168,7 +181,7 @@ app.post(
     }
 
     const emailRegex = /.+@.+\..+/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(trimmedEmail)) {
       req.session.flash = {
         error: "L'adresse email fournie n'est pas valide.",
         formData,
@@ -178,10 +191,39 @@ app.post(
 
     db.prepare(
       'INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)'
-    ).run(name.trim(), email.trim(), subject.trim(), message.trim());
+    ).run(trimmedName, trimmedEmail, trimmedSubject, trimmedMessage);
+
+    const settings = db.prepare('SELECT contact_email FROM settings WHERE id = 1').get();
+    const contactEmail = settings && settings.contact_email
+      ? settings.contact_email.trim()
+      : 'contact@cecilartiste.com';
+
+    let successMessage = 'Merci ! Votre message a bien été enregistré. Je vous réponds rapidement.';
+    const emailConfigured = mailer.isEmailConfigured();
+
+    if (contactEmail && emailConfigured) {
+      try {
+        await mailer.sendContactNotification({
+          to: contactEmail,
+          name: trimmedName,
+          email: trimmedEmail,
+          subject: trimmedSubject,
+          message: trimmedMessage,
+        });
+        successMessage = 'Merci ! Votre message a bien été envoyé. Je vous réponds rapidement.';
+      } catch (error) {
+        console.error("Échec de l'envoi de l'email de notification du formulaire de contact.", error);
+        successMessage =
+          "Merci ! Votre message a bien été enregistré, mais l'envoi de l'email a rencontré un problème. Je vous répondrai dès que possible.";
+      }
+    } else if (contactEmail && !emailConfigured) {
+      console.warn(
+        "Aucun serveur SMTP n'est configuré. Le message a été enregistré mais aucune notification par email n'a été envoyée."
+      );
+    }
 
     req.session.flash = {
-      success: 'Merci ! Votre message a bien été enregistré. Je vous réponds rapidement.',
+      success: successMessage,
     };
 
     return res.redirect('/contact');
