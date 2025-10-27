@@ -91,6 +91,11 @@
                     <textarea id="hero_intro_body" name="hero_intro_body" rows="5" required><%= heroIntro.body %></textarea>
                     <small>Mettez en avant votre style, votre ancrage à Amiens et vos déplacements partout en France.</small>
                 </div>
+                <div>
+                    <label for="hero_intro_image_url">Image de la présentation</label>
+                    <input type="url" id="hero_intro_image_url" name="hero_intro_image_url" value="<%= heroIntro.image %>" placeholder="https://">
+                    <small>Indiquez une image accessible en ligne (http ou https). Laissez vide pour conserver l'image actuelle.</small>
+                </div>
                 <button type="submit" class="button-primary">Enregistrer</button>
             </form>
         </section>

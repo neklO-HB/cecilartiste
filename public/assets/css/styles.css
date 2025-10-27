@@ -290,7 +290,7 @@ html.theme-pastel .site-header {
     width: min(100%, 380px);
     aspect-ratio: 4 / 5;
     border-radius: calc(var(--radius-large) + 6px);
-    background-image: url('https://images.unsplash.com/photo-1526948128573-703ee1aeb6fa?auto=format&fit=crop&w=900&q=80');
+    background-image: var(--hero-image, url('https://i.imgur.com/wy27JGt.jpeg'));
     background-size: cover;
     background-position: center;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);

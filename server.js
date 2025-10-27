@@ -17,6 +17,8 @@ const mailer = require('./src/mailer');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const DEFAULT_HERO_IMAGE_URL = 'https://i.imgur.com/wy27JGt.jpeg';
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -41,6 +43,23 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+function resolveHeroImageUrl(rawValue) {
+  const trimmed = (rawValue || '').trim();
+  if (!trimmed) {
+    return DEFAULT_HERO_IMAGE_URL;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return DEFAULT_HERO_IMAGE_URL;
+    }
+    return parsed.toString();
+  } catch (error) {
+    return DEFAULT_HERO_IMAGE_URL;
+  }
+}
 
 const allowedMimes = new Map([
   ['image/jpeg', '.jpg'],
@@ -143,7 +162,7 @@ app.get(
     const experiences = experiencesService.getAllExperiences(db);
     const heroSettings = db
       .prepare(
-        'SELECT hero_intro_heading, hero_intro_subheading, hero_intro_body FROM settings WHERE id = 1'
+        'SELECT hero_intro_heading, hero_intro_subheading, hero_intro_body, hero_intro_image_url FROM settings WHERE id = 1'
       )
       .get();
     const heroIntro = {
@@ -154,6 +173,7 @@ app.get(
       body:
         heroSettings?.hero_intro_body?.trim() ||
         "Artiste photographe spécialisée dans les univers colorés, j’immortalise vos histoires à Amiens et partout où elles me portent. Reportages de mariages, portraits signature ou projets professionnels : je me déplace en France et à l’international pour créer des images lumineuses qui vous ressemblent.",
+      image: resolveHeroImageUrl(heroSettings?.hero_intro_image_url),
     };
     res.render('index', {
       photos,
@@ -283,7 +303,7 @@ app.get(
     const experiences = experiencesService.getAllExperiences(db);
     const settings = db
       .prepare(
-        'SELECT contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body FROM settings WHERE id = 1'
+        'SELECT contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body, hero_intro_image_url FROM settings WHERE id = 1'
       )
       .get();
     const contactEmail = settings ? settings.contact_email : 'contact@cecilartiste.com';
@@ -294,6 +314,7 @@ app.get(
       body:
         settings?.hero_intro_body?.trim() ||
         "Artiste photographe spécialisée dans les univers colorés, j’immortalise vos histoires à Amiens et partout où elles me portent. Reportages de mariages, portraits signature ou projets professionnels : je me déplace en France et à l’international pour créer des images lumineuses qui vous ressemblent.",
+      image: resolveHeroImageUrl(settings?.hero_intro_image_url),
     };
     const messages = db
       .prepare(
@@ -821,11 +842,13 @@ app.post(
       hero_intro_heading: rawHeading = '',
       hero_intro_subheading: rawSubheading = '',
       hero_intro_body: rawBody = '',
+      hero_intro_image_url: rawImageUrl = '',
     } = req.body;
 
     const heading = rawHeading.trim();
     const subheading = rawSubheading.trim();
     const body = rawBody.trim();
+    const proposedImageUrl = rawImageUrl.trim();
     const errors = [];
 
     if (!heading) {
@@ -840,25 +863,43 @@ app.post(
       errors.push("Merci de rédiger un texte de présentation.");
     }
 
+    let heroImageUrl = DEFAULT_HERO_IMAGE_URL;
+
+    const currentSettings = db
+      .prepare('SELECT contact_email, hero_intro_image_url FROM settings WHERE id = 1')
+      .get();
+
+    const contactEmail = currentSettings?.contact_email || 'contact@cecilartiste.com';
+    const existingImage = resolveHeroImageUrl(currentSettings?.hero_intro_image_url);
+
+    if (!proposedImageUrl) {
+      heroImageUrl = existingImage;
+    } else {
+      try {
+        const parsed = new URL(proposedImageUrl);
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          errors.push("Merci de fournir une URL d'image valide (http ou https).");
+        } else {
+          heroImageUrl = parsed.toString();
+        }
+      } catch (error) {
+        errors.push("Merci de fournir une URL d'image valide (http ou https).");
+      }
+    }
+
     if (errors.length > 0) {
       req.session.flash = { errors };
       return res.redirect('/admin#hero-intro');
     }
 
-    const currentSettings = db
-      .prepare('SELECT contact_email FROM settings WHERE id = 1')
-      .get();
-
-    const contactEmail = currentSettings?.contact_email || 'contact@cecilartiste.com';
-
     if (currentSettings) {
       db.prepare(
-        'UPDATE settings SET hero_intro_heading = ?, hero_intro_subheading = ?, hero_intro_body = ? WHERE id = 1'
-      ).run(heading, subheading, body);
+        'UPDATE settings SET hero_intro_heading = ?, hero_intro_subheading = ?, hero_intro_body = ?, hero_intro_image_url = ? WHERE id = 1'
+      ).run(heading, subheading, body, heroImageUrl);
     } else {
       db.prepare(
-        'INSERT INTO settings (id, contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body) VALUES (1, ?, ?, ?, ?)'
-      ).run(contactEmail, heading, subheading, body);
+        'INSERT INTO settings (id, contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body, hero_intro_image_url) VALUES (1, ?, ?, ?, ?, ?)'
+      ).run(contactEmail, heading, subheading, body, heroImageUrl);
     }
 
     req.session.flash = { success: 'Présentation mise à jour.' };
