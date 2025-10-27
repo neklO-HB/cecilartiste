@@ -1,0 +1,53 @@
+<%- include('../partials/header') %>
+<section class="category-hero" aria-labelledby="category-hero-title" style="--category-hero-image: url('<%= category.hero_image_path || '' %>')">
+    <div class="category-hero__overlay"></div>
+    <div class="category-hero__content">
+        <p class="category-hero__eyebrow">Galerie thématique</p>
+        <h1 id="category-hero-title"><%= category.name %></h1>
+        <p>
+            <% if (category.description) { %>
+                <%- nl2br(category.description) %>
+            <% } else { %>
+                Une ambiance à composer : ajoutez vos photos pour révéler la personnalité de cette collection.
+            <% } %>
+        </p>
+        <span class="category-hero__badge"><%= category.photo_count %> photo<%= category.photo_count > 1 ? 's' : '' %> disponibles</span>
+        <a class="button button--ghost" href="/contact">Imaginer mon reportage</a>
+    </div>
+</section>
+<section class="category-viewer" aria-labelledby="category-viewer-title">
+    <header class="category-viewer__intro">
+        <h2 id="category-viewer-title">Visionneuse immersive</h2>
+        <p>
+            Parcourez les images en scroll horizontal ou au clavier pour une expérience fluide. Chaque photo profite d'un traitement dynamique et d'effets lumineux subtils.
+        </p>
+    </header>
+    <% if (photos && photos.length > 0) { %>
+        <div class="category-viewer__carousel" role="list">
+            <% photos.forEach((photo, index) => { %>
+                <figure class="category-viewer__item" role="listitem" style="--category-viewer-accent: <%= photo.accent_color || '#ff6f61' %>; --category-viewer-index: <%= index %>">
+                    <div class="category-viewer__image-wrapper">
+                        <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
+                        <span class="category-viewer__glow" aria-hidden="true"></span>
+                    </div>
+                    <figcaption class="category-viewer__caption">
+                        <h3><%= photo.title %></h3>
+                        <% if (photo.description) { %>
+                            <p><%- nl2br(photo.description) %></p>
+                        <% } %>
+                        <div class="category-viewer__meta">
+                            <span>Palette <%= (photo.palette || '').charAt(0).toUpperCase() + (photo.palette || '').slice(1) %></span>
+                            <span>Créée le <%= formatDate(photo.created_at) %></span>
+                        </div>
+                    </figcaption>
+                </figure>
+            <% }) %>
+        </div>
+    <% } else { %>
+        <div class="category-viewer__empty">
+            <p>Aucune photo n'est encore associée à cette catégorie. Ajoutez des images depuis l'administration pour dévoiler cette galerie.</p>
+            <a class="button" href="/admin">Ajouter des photos</a>
+        </div>
+    <% } %>
+</section>
+<%- include('../partials/footer') %>
