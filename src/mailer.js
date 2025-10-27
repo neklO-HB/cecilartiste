@@ -9,6 +9,20 @@ try {
 
 let cachedTransporter;
 
+function resolveDefaultFrom() {
+  const { SMTP_FROM, SMTP_USER } = process.env;
+
+  if (SMTP_FROM && SMTP_FROM.includes('@')) {
+    return SMTP_FROM;
+  }
+
+  if (SMTP_USER && SMTP_USER.includes('@')) {
+    return `Cécil'Artiste <${SMTP_USER}>`;
+  }
+
+  return null;
+}
+
 function getTransporter() {
   if (cachedTransporter !== undefined) {
     return cachedTransporter;
@@ -19,7 +33,7 @@ function getTransporter() {
     return cachedTransporter;
   }
 
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE, SMTP_FROM } = process.env;
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE } = process.env;
 
   if (!SMTP_HOST) {
     cachedTransporter = null;
@@ -59,15 +73,11 @@ function getTransporter() {
 
   cachedTransporter = nodemailer.createTransport(transportConfig);
 
-  if (SMTP_FROM && SMTP_FROM.includes('@')) {
+  const defaultFrom = resolveDefaultFrom();
+  if (defaultFrom) {
     cachedTransporter.defaults = {
       ...(cachedTransporter.defaults || {}),
-      from: SMTP_FROM,
-    };
-  } else if (SMTP_USER && SMTP_USER.includes('@')) {
-    cachedTransporter.defaults = {
-      ...(cachedTransporter.defaults || {}),
-      from: `Cécile <${SMTP_USER}>`,
+      from: defaultFrom,
     };
   }
 
@@ -87,7 +97,9 @@ async function sendContactNotification({ to, name, email, subject, message }) {
 
   const safeName = escapeHtml(name);
   const safeEmail = escapeHtml(email);
-  const safeSubject = escapeHtml(subject);
+  const replyToAddress = (email || '').replace(/[\r\n]+/g, '').trim();
+  const rawSubject = (subject || '').replace(/[\r\n]+/g, ' ').trim();
+  const safeSubject = escapeHtml(rawSubject || subject || '');
   const safeMessage = escapeHtml(message).replace(/\r?\n/g, '<br>');
 
   const textContent = [
@@ -95,7 +107,7 @@ async function sendContactNotification({ to, name, email, subject, message }) {
     '',
     `Nom : ${name}`,
     `Email : ${email}`,
-    `Objet : ${subject}`,
+    `Objet : ${rawSubject || subject || 'Demande de contact'}`,
     '',
     message,
   ].join('\n');
@@ -105,20 +117,25 @@ async function sendContactNotification({ to, name, email, subject, message }) {
     <ul>
       <li><strong>Nom :</strong> ${safeName}</li>
       <li><strong>Email :</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></li>
-      <li><strong>Objet :</strong> ${safeSubject}</li>
+      <li><strong>Objet :</strong> ${safeSubject || 'Demande de contact'}</li>
     </ul>
     <p><strong>Message :</strong></p>
     <p>${safeMessage}</p>
   `;
 
+  const defaultFrom = resolveDefaultFrom();
+
   const mailOptions = {
     to,
-    from: "Cécil'Artiste <contact@cecilartiste.fr>",
-    subject: 'Demande de contact',
+    subject: rawSubject ? `[Contact] ${rawSubject}` : 'Demande de contact',
     text: textContent,
     html: htmlContent,
-    replyTo: email,
+    replyTo: replyToAddress || undefined,
   };
+
+  if (defaultFrom) {
+    mailOptions.from = defaultFrom;
+  }
 
   return transporter.sendMail(mailOptions);
 }
