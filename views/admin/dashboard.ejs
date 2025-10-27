@@ -43,15 +43,6 @@
                     <textarea id="description" name="description" rows="4" placeholder="Décrivez l'histoire derrière cette image..."></textarea>
                 </div>
                 <div>
-                    <label for="palette">Palette</label>
-                    <select id="palette" name="palette">
-                        <option value="vibrant">Vibrant</option>
-                        <option value="chromatique">Chromatique</option>
-                        <option value="pastel">Pastel</option>
-                        <option value="solaire">Solaire</option>
-                    </select>
-                </div>
-                <div>
                     <label for="accent_color">Couleur d'accent</label>
                     <input type="color" id="accent_color" name="accent_color" value="#ff6f61">
                 </div>
@@ -281,7 +272,6 @@
         <% if (!photos || photos.length === 0) { %>
             <p>Aucune photo pour le moment. Ajoutez vos œuvres pour les voir apparaître ici.</p>
         <% } else { %>
-            <% const palettes = { vibrant: 'Vibrant', chromatique: 'Chromatique', pastel: 'Pastel', solaire: 'Solaire' }; %>
             <div class="admin-photos">
                 <% photos.forEach(photo => { %>
                     <article class="admin-photo-item">
@@ -299,14 +289,6 @@
                                 <div>
                                     <label for="description_<%= photo.id %>">Description</label>
                                     <textarea id="description_<%= photo.id %>" name="description" rows="3"><%= photo.description || '' %></textarea>
-                                </div>
-                                <div>
-                                    <label for="palette_<%= photo.id %>">Palette</label>
-                                    <select id="palette_<%= photo.id %>" name="palette">
-                                        <% Object.entries(palettes).forEach(([value, label]) => { %>
-                                            <option value="<%= value %>" <%= photo.palette === value ? 'selected' : '' %>><%= label %></option>
-                                        <% }) %>
-                                    </select>
                                 </div>
                                 <div>
                                     <label for="accent_<%= photo.id %>">Couleur d'accent</label>
