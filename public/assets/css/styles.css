@@ -433,7 +433,7 @@ html.theme-pastel .site-header {
 .category-card__media {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 5 / 7;
     width: 100%;
     display: grid;
     place-items: center;
@@ -1801,7 +1801,7 @@ html.theme-pastel .admin-photo-item {
     }
 
     .category-card__media {
-        aspect-ratio: 3 / 2;
+        aspect-ratio: 5 / 7;
     }
 
     .category-card__divider {
