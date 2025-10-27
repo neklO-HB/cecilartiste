@@ -483,7 +483,6 @@ app.post(
     const {
       title = '',
       description = '',
-      palette = 'vibrant',
       accent_color = '#ff6f61',
       category_id: rawCategoryId = '',
     } = req.body;
@@ -524,16 +523,15 @@ app.post(
 
     const relativePath = `/uploads/${req.file.filename}`;
 
-    db.prepare(
-      'INSERT INTO photos (title, description, image_path, palette, accent_color, category_id) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(
-      title.trim(),
-      description.trim(),
-      relativePath,
-      palette.trim(),
-      accent_color.trim() || '#ff6f61',
-      categoryValue
-    );
+    db
+      .prepare('INSERT INTO photos (title, description, image_path, accent_color, category_id) VALUES (?, ?, ?, ?, ?)')
+      .run(
+        title.trim(),
+        description.trim(),
+        relativePath,
+        accent_color.trim() || '#ff6f61',
+        categoryValue
+      );
 
     req.session.flash = { success: 'La photo a été ajoutée avec succès.' };
     return res.redirect('/admin');
@@ -549,7 +547,6 @@ app.post(
     const {
       title = '',
       description = '',
-      palette = 'vibrant',
       accent_color = '#ff6f61',
       category_id: rawCategoryId = '',
     } = req.body;
@@ -593,29 +590,27 @@ app.post(
 
     if (req.file) {
       const newPath = `/uploads/${req.file.filename}`;
-      db.prepare(
-        'UPDATE photos SET title = ?, description = ?, palette = ?, accent_color = ?, category_id = ?, image_path = ? WHERE id = ?'
-      ).run(
-        title.trim(),
-        description.trim(),
-        palette.trim(),
-        accent_color.trim() || '#ff6f61',
-        categoryValue,
-        newPath,
-        photoId
-      );
+      db
+        .prepare('UPDATE photos SET title = ?, description = ?, accent_color = ?, category_id = ?, image_path = ? WHERE id = ?')
+        .run(
+          title.trim(),
+          description.trim(),
+          accent_color.trim() || '#ff6f61',
+          categoryValue,
+          newPath,
+          photoId
+        );
       deleteFileIfExists(existing.image_path);
     } else {
-      db.prepare(
-        'UPDATE photos SET title = ?, description = ?, palette = ?, accent_color = ?, category_id = ? WHERE id = ?'
-      ).run(
-        title.trim(),
-        description.trim(),
-        palette.trim(),
-        accent_color.trim() || '#ff6f61',
-        categoryValue,
-        photoId
-      );
+      db
+        .prepare('UPDATE photos SET title = ?, description = ?, accent_color = ?, category_id = ? WHERE id = ?')
+        .run(
+          title.trim(),
+          description.trim(),
+          accent_color.trim() || '#ff6f61',
+          categoryValue,
+          photoId
+        );
     }
 
     req.session.flash = { success: 'La photo a été mise à jour.' };

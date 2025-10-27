@@ -36,7 +36,6 @@
                             <p><%- nl2br(photo.description) %></p>
                         <% } %>
                         <div class="category-viewer__meta">
-                            <span>Palette <%= (photo.palette || '').charAt(0).toUpperCase() + (photo.palette || '').slice(1) %></span>
                             <span>Créée le <%= formatDate(photo.created_at) %></span>
                         </div>
                     </figcaption>
