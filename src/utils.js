@@ -54,6 +54,18 @@ function deleteFileIfExists(relativePath) {
   }
 }
 
+function slugify(value) {
+  const base = String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-')
+    .toLowerCase();
+
+  return base || '';
+}
+
 module.exports = {
   ensureUploadDir,
   formatDate,
@@ -61,4 +73,5 @@ module.exports = {
   normalizePublicPath,
   relativePublicPath,
   deleteFileIfExists,
+  slugify,
 };

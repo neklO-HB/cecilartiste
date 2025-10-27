@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { slugify } = require('./utils');
 let DatabaseConstructor;
 let usingBetterSqlite = false;
 
@@ -97,6 +98,12 @@ function prepareDatabase() {
     db.exec('ALTER TABLE photos ADD COLUMN category_id INTEGER REFERENCES categories(id)');
   }
 
+  const categoryColumns = db.prepare('PRAGMA table_info(categories)').all();
+  const hasSlugColumn = categoryColumns.some(column => column.name === 'slug');
+  if (!hasSlugColumn) {
+    db.exec('ALTER TABLE categories ADD COLUMN slug TEXT');
+  }
+
   const settingsColumns = db.prepare('PRAGMA table_info(settings)').all();
   const columnNames = settingsColumns.map(column => column.name);
 
@@ -164,6 +171,48 @@ function prepareDatabase() {
       ).run(name, null, index);
     }
   });
+
+  const categories = db
+    .prepare('SELECT id, name, slug FROM categories ORDER BY position ASC, name ASC')
+    .all();
+
+  const ensureUniqueSlug = (candidate, categoryId) => {
+    let base = slugify(candidate);
+    if (!base) {
+      base = `categorie-${categoryId}`;
+    }
+
+    let finalSlug = base;
+    let suffix = 1;
+    const conflictStatement = db.prepare(
+      'SELECT id FROM categories WHERE slug = ? AND id <> ?'
+    );
+
+    while (true) {
+      const conflict = conflictStatement.get(finalSlug, categoryId);
+      if (!conflict) {
+        return finalSlug;
+      }
+      suffix += 1;
+      finalSlug = `${base}-${suffix}`;
+    }
+  };
+
+  const updateSlugStatement = db.prepare(
+    'UPDATE categories SET slug = ? WHERE id = ?'
+  );
+
+  categories.forEach(category => {
+    const currentSlug = (category.slug || '').trim();
+    const nextSlug = currentSlug
+      ? ensureUniqueSlug(currentSlug, category.id)
+      : ensureUniqueSlug(category.name, category.id);
+    if (nextSlug !== currentSlug) {
+      updateSlugStatement.run(nextSlug, category.id);
+    }
+  });
+
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug)');
 
   const experienceColumns = db.prepare('PRAGMA table_info(experiences)').all();
   const experienceColumnNames = experienceColumns.map(column => column.name);

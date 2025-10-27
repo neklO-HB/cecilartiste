@@ -31,7 +31,8 @@
     <div class="hero__mosaic" id="categories-explore">
         <% if (categories && categories.length > 0) { %>
             <% categories.forEach(category => { %>
-                <article class="category-card">
+                <% const categoryHref = category.slug ? `/galerie/${category.slug}` : '/galerie'; %>
+                <a class="category-card" href="<%= categoryHref %>">
                     <div class="category-card__media">
                         <% if (category.hero_image_path) { %>
                             <img src="<%= category.hero_image_path %>" alt="Aperçu de la catégorie <%= category.name %>">
@@ -42,8 +43,9 @@
                     <span class="category-card__divider" aria-hidden="true"></span>
                     <div class="category-card__content">
                         <h3><%= category.name %></h3>
+                        <span class="category-card__cta">Ouvrir la galerie</span>
                     </div>
-                </article>
+                </a>
             <% }) %>
         <% } else { %>
             <% const placeholders = ['Mariage', 'Baptême', 'Anniversaire', 'Grossesse', 'Nouveau-né', 'Autres']; %>

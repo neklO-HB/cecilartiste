@@ -29,9 +29,33 @@
         <span class="logo">Cecil'<span>Artiste</span></span>
         <p class="tagline">Photographe à Amiens &amp; dans la Somme (80)</p>
     </div>
-    <nav class="main-nav">
-        <a href="/">Accueil</a>
-        <a href="/contact">Contact</a>
+    <% const categoriesForNav = navCategories || []; %>
+    <% const activeCategorySlug = typeof activeCategorySlug !== 'undefined' ? activeCategorySlug : null; %>
+    <% const isGalleryOverview = typeof isGalleryOverview !== 'undefined' ? isGalleryOverview : false; %>
+    <nav class="main-nav" aria-label="Navigation principale">
+        <a href="/" class="<%= currentPath === '/' ? 'is-active' : '' %>">Accueil</a>
+        <details class="main-nav__dropdown" <%= isGalleryOverview || activeCategorySlug ? 'open' : '' %>>
+            <summary class="main-nav__dropdown-label <%= (isGalleryOverview || activeCategorySlug) ? 'is-active' : '' %>" role="button" aria-haspopup="true">
+                Galerie
+                <span aria-hidden="true" class="main-nav__chevron">▾</span>
+            </summary>
+            <div class="main-nav__dropdown-panel">
+                <a href="/galerie" class="main-nav__dropdown-link <%= isGalleryOverview ? 'is-active' : '' %>">Toutes les galeries</a>
+                <% if (categoriesForNav.length > 0) { %>
+                    <ul class="main-nav__dropdown-list">
+                        <% categoriesForNav.forEach(category => { %>
+                            <% const isActive = activeCategorySlug === category.slug; %>
+                            <li>
+                                <a href="/galerie/<%= category.slug %>" class="main-nav__dropdown-link <%= isActive ? 'is-active' : '' %>"><%= category.name %></a>
+                            </li>
+                        <% }) %>
+                    </ul>
+                <% } else { %>
+                    <p class="main-nav__dropdown-empty">Créez votre première catégorie pour alimenter la galerie.</p>
+                <% } %>
+            </div>
+        </details>
+        <a href="/contact" class="<%= currentPath === '/contact' ? 'is-active' : '' %>">Contact</a>
         <% if (currentUser) { %>
             <form action="/admin/logout" method="post" class="main-nav__logout">
                 <button type="submit" class="admin-link">Déconnexion</button>

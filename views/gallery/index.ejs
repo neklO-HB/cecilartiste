@@ -1,0 +1,32 @@
+<%- include('../partials/header') %>
+<section class="gallery-overview" aria-labelledby="gallery-overview-title">
+    <header class="gallery-overview__intro">
+        <p class="gallery-overview__eyebrow">Portfolio vivant</p>
+        <h1 id="gallery-overview-title">Explorez les univers photographiques</h1>
+        <p>
+            Chaque catégorie correspond à une expérience immersive que vous pouvez personnaliser depuis l'administration.
+            Sélectionnez une galerie pour découvrir un diaporama cinématique et plonger dans l'atmosphère de vos futurs reportages.
+        </p>
+    </header>
+    <% if (categories && categories.length > 0) { %>
+        <div class="gallery-overview__grid">
+            <% categories.forEach(category => { %>
+                <a class="gallery-overview__card" href="/galerie/<%= category.slug %>" style="--gallery-card-image: url('<%= category.hero_image_path || '' %>')">
+                    <div class="gallery-overview__card-media" aria-hidden="true"></div>
+                    <div class="gallery-overview__card-content">
+                        <h2><%= category.name %></h2>
+                        <% if (category.description) { %>
+                            <p><%- nl2br(category.description) %></p>
+                        <% } else { %>
+                            <p>Une galerie prête à accueillir vos images les plus vibrantes.</p>
+                        <% } %>
+                        <span class="gallery-overview__badge"><%= category.photo_count %> photo<%= category.photo_count > 1 ? 's' : '' %></span>
+                    </div>
+                </a>
+            <% }) %>
+        </div>
+    <% } else { %>
+        <p class="gallery-overview__empty">Aucune catégorie n'est disponible pour le moment. Ajoutez-en une depuis votre espace d'administration pour alimenter la galerie.</p>
+    <% } %>
+</section>
+<%- include('../partials/footer') %>

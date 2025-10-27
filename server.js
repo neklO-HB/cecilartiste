@@ -11,6 +11,7 @@ const {
   nl2br,
   deleteFileIfExists,
   normalizePublicPath,
+  slugify,
 } = require('./src/utils');
 const mailer = require('./src/mailer');
 
@@ -43,6 +44,48 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+
+const categorySlugStatement = db.prepare(
+  'SELECT id FROM categories WHERE slug = ?'
+);
+const categorySlugConflictStatement = db.prepare(
+  'SELECT id FROM categories WHERE slug = ? AND id <> ?'
+);
+const navCategoriesStatement = db.prepare(
+  'SELECT id, name, slug FROM categories ORDER BY position ASC, name ASC'
+);
+const categoryBySlugStatement = db.prepare(
+  'SELECT * FROM categories WHERE slug = ?'
+);
+
+function generateCategorySlug(name, excludeId = null) {
+  const base = slugify(name) || 'categorie';
+  let candidate = base;
+  let suffix = 1;
+
+  while (true) {
+    const conflict = excludeId
+      ? categorySlugConflictStatement.get(candidate, excludeId)
+      : categorySlugStatement.get(candidate);
+    if (!conflict) {
+      return candidate;
+    }
+    suffix += 1;
+    candidate = `${base}-${suffix}`;
+  }
+}
+
+app.use((req, res, next) => {
+  try {
+    res.locals.navCategories = navCategoriesStatement
+      .all()
+      .filter(category => Boolean((category.slug || '').trim()));
+    res.locals.currentPath = req.path;
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 function resolveHeroImageUrl(rawValue) {
   const trimmed = (rawValue || '').trim();
@@ -180,6 +223,73 @@ app.get(
       categories,
       heroIntro,
       experiences,
+    });
+  })
+);
+
+app.get(
+  '/galerie',
+  asyncHandler(async (req, res) => {
+    const categories = db
+      .prepare(
+        'SELECT id, name, description, hero_image_path, slug FROM categories ORDER BY position ASC, name ASC'
+      )
+      .all()
+      .map(category => ({
+        ...category,
+        hero_image_path: normalizePublicPath(category.hero_image_path),
+      }));
+
+    const counts = db
+      .prepare(
+        'SELECT category_id, COUNT(*) AS total FROM photos WHERE category_id IS NOT NULL GROUP BY category_id'
+      )
+      .all();
+    const totals = new Map(counts.map(row => [row.category_id, row.total]));
+
+    const categoriesWithStats = categories.map(category => ({
+      ...category,
+      photo_count: totals.get(category.id) || 0,
+    }));
+
+    res.locals.isGalleryOverview = true;
+
+    res.render('gallery/index', {
+      categories: categoriesWithStats,
+    });
+  })
+);
+
+app.get(
+  '/galerie/:slug',
+  asyncHandler(async (req, res) => {
+    const { slug } = req.params;
+    const category = categoryBySlugStatement.get(slug);
+
+    if (!category) {
+      res.status(404);
+      return res.render('error', {
+        message: "Cette galerie est introuvable.",
+      });
+    }
+
+    const photos = db
+      .prepare('SELECT * FROM photos WHERE category_id = ? ORDER BY created_at DESC')
+      .all(category.id)
+      .map(photo => ({
+        ...photo,
+        image_path: normalizePublicPath(photo.image_path),
+      }));
+
+    res.locals.activeCategorySlug = category.slug;
+
+    res.render('gallery/category', {
+      category: {
+        ...category,
+        hero_image_path: normalizePublicPath(category.hero_image_path),
+        photo_count: photos.length,
+      },
+      photos,
     });
   })
 );
@@ -581,9 +691,11 @@ app.post(
     const finalPosition = Number.isInteger(positionValue) ? positionValue : nextPosition;
     const heroImagePath = `/uploads/${req.file.filename}`;
 
+    const slug = generateCategorySlug(trimmedName);
+
     db.prepare(
-      'INSERT INTO categories (name, description, hero_image_path, position) VALUES (?, ?, ?, ?)'
-    ).run(trimmedName, null, heroImagePath, finalPosition);
+      'INSERT INTO categories (name, description, hero_image_path, position, slug) VALUES (?, ?, ?, ?, ?)'
+    ).run(trimmedName, null, heroImagePath, finalPosition, slug);
 
     req.session.flash = { success: 'Catégorie créée avec succès.' };
     return res.redirect('/admin#categories');
@@ -634,10 +746,14 @@ app.post(
 
     const finalPosition = Number.isInteger(positionValue) ? positionValue : existing.position;
     const heroImagePath = req.file ? `/uploads/${req.file.filename}` : existing.hero_image_path;
+    const existingSlug = (existing && existing.slug) || null;
+    const slug = existingSlug && trimmedName === existing.name
+      ? existingSlug
+      : generateCategorySlug(trimmedName, categoryId);
 
     db.prepare(
-      'UPDATE categories SET name = ?, description = ?, hero_image_path = ?, position = ? WHERE id = ?'
-    ).run(trimmedName, null, heroImagePath, finalPosition, categoryId);
+      'UPDATE categories SET name = ?, description = ?, hero_image_path = ?, position = ?, slug = ? WHERE id = ?'
+    ).run(trimmedName, null, heroImagePath, finalPosition, slug, categoryId);
 
     if (req.file && existing.hero_image_path && existing.hero_image_path !== heroImagePath) {
       deleteFileIfExists(existing.hero_image_path);
