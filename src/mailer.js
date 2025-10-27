@@ -113,7 +113,8 @@ async function sendContactNotification({ to, name, email, subject, message }) {
 
   const mailOptions = {
     to,
-    subject: `[Cecil'Artiste] Nouveau message : ${subject}`,
+    from: "Cécil'Artiste <contact@cecilartiste.fr>",
+    subject: 'Demande de contact',
     text: textContent,
     html: htmlContent,
     replyTo: email,
