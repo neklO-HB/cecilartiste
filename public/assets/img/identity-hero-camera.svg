@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2b2f77" />
+      <stop offset="45%" stop-color="#20234f" />
+      <stop offset="100%" stop-color="#14162f" />
+    </linearGradient>
+    <linearGradient id="panelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3c7af3" />
+      <stop offset="50%" stop-color="#3356c7" />
+      <stop offset="100%" stop-color="#1f2d5e" />
+    </linearGradient>
+    <linearGradient id="lensGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9bf2ff" />
+      <stop offset="40%" stop-color="#4b9dff" />
+      <stop offset="70%" stop-color="#2038a0" />
+      <stop offset="100%" stop-color="#0c163f" />
+    </linearGradient>
+    <radialGradient id="lensGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="40%" stop-color="#9bf2ff" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#0d1642" stop-opacity="0" />
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="30" stdDeviation="30" flood-color="#0e0f2a" flood-opacity="0.35" />
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M135 190h330c40 0 60 20 68 50l32 120c10 40-5 72-44 72H146c-40 0-72-24-82-66l-26-110c-8-38 24-66 62-66z" fill="url(#bodyGradient)" />
+    <path d="M180 150h200c16 0 30 10 34 24l12 42H130l12-42c4-14 18-24 34-24z" fill="#2f337a" />
+    <rect x="136" y="180" width="328" height="220" rx="46" fill="url(#panelGradient)" opacity="0.85" />
+    <rect x="160" y="210" width="280" height="160" rx="34" fill="#121433" opacity="0.65" />
+    <circle cx="300" cy="290" r="134" fill="#0c1028" />
+    <circle cx="300" cy="290" r="110" fill="url(#lensGradient)" />
+    <circle cx="300" cy="290" r="70" fill="#0c193e" opacity="0.8" />
+    <circle cx="300" cy="290" r="44" fill="#03122b" opacity="0.8" />
+    <circle cx="300" cy="290" r="110" fill="url(#lensGlow)" opacity="0.65" />
+    <circle cx="340" cy="250" r="24" fill="#b7f3ff" opacity="0.9" />
+    <ellipse cx="300" cy="432" rx="120" ry="28" fill="#070815" opacity="0.55" />
+    <path d="M410 188h66c18 0 26 10 30 26l12 46c6 22-8 38-30 38h-70c-22 0-38-12-42-32l-8-34c-4-18 12-44 42-44z" fill="#d65454" opacity="0.9" />
+    <rect x="186" y="182" width="80" height="34" rx="16" fill="#ffdc82" opacity="0.85" />
+    <rect x="210" y="174" width="120" height="20" rx="10" fill="#5f63b3" />
+    <circle cx="200" cy="250" r="20" fill="#4de2c2" opacity="0.85" />
+    <circle cx="220" cy="246" r="10" fill="#d7fff0" />
+    <rect x="368" y="330" width="60" height="26" rx="10" fill="#4de2c2" opacity="0.7" />
+  </g>
+</svg>
