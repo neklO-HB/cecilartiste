@@ -395,10 +395,10 @@ html.theme-pastel .site-header {
 }
 
 .identity-hero__image {
-    width: min(100%, 380px);
+    width: min(100%, 420px);
     aspect-ratio: 4 / 5;
     border-radius: calc(var(--radius-large) + 6px);
-    background-image: var(--hero-image, url('https://i.imgur.com/wy27JGt.jpeg'));
+    background-image: var(--hero-image, url('https://i.postimg.cc/brcb2z8C/21314712-8c8f-4d76-829b-f9a4fc4ecb31.png'));
     background-size: cover;
     background-position: center;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);

@@ -18,7 +18,8 @@ const mailer = require('./src/mailer');
 const app = express();
 const port = process.env.PORT || 3000;
 
-const DEFAULT_HERO_IMAGE_URL = 'https://i.imgur.com/wy27JGt.jpeg';
+const DEFAULT_HERO_IMAGE_URL =
+  'https://i.postimg.cc/brcb2z8C/21314712-8c8f-4d76-829b-f9a4fc4ecb31.png';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
