@@ -35,9 +35,6 @@
                         <% if (photo.description) { %>
                             <p><%- nl2br(photo.description) %></p>
                         <% } %>
-                        <div class="category-viewer__meta">
-                            <span>Créée le <%= formatDate(photo.created_at) %></span>
-                        </div>
                     </figcaption>
                 </figure>
             <% }) %>

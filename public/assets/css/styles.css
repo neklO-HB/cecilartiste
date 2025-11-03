@@ -1913,6 +1913,59 @@ html.theme-pastel .notice {
     gap: 1.1rem;
 }
 
+.studio-insights-manager {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.studio-insights-manager__column {
+    display: grid;
+    gap: 1.1rem;
+}
+
+.studio-insights-list {
+    display: grid;
+    gap: 1.2rem;
+}
+
+.studio-insights-item {
+    display: grid;
+    grid-template-columns: minmax(120px, 160px) 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius-medium);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+html.theme-chromatique .studio-insights-item {
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: inset 0 0 0 1px rgba(255, 60, 172, 0.1);
+}
+
+html.theme-pastel .studio-insights-item {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: inset 0 0 0 1px rgba(205, 180, 219, 0.18);
+}
+
+.studio-insights-item__value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    align-self: center;
+}
+
+.studio-insights-item__content {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.studio-insights-item__grid {
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
 .experience-list {
     display: grid;
     gap: 1.2rem;

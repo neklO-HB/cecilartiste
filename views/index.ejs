@@ -211,9 +211,6 @@
                     <% if (photo.description) { %>
                         <p><%- nl2br(photo.description) %></p>
                     <% } %>
-                    <div class="photo-viewer__meta">
-                        <span class="photo-viewer__meta-item">Créée le <%= formatDate(photo.created_at) %></span>
-                    </div>
                 </figcaption>
             </figure>
         <% }) %>
@@ -251,22 +248,31 @@
         <p>Des collaborations fidèles et une recherche constante de nouvelles palettes pour magnifier vos projets.</p>
     </div>
     <dl class="studio-insights__grid">
-        <div class="studio-insight reveal-on-scroll" data-count="12">
-            <dt>12</dt>
-            <dd>années de reportages et de créations sur-mesure</dd>
-        </div>
-        <div class="studio-insight reveal-on-scroll" data-count="180">
-            <dt>180</dt>
-            <dd>clients accompagnés entre Paris, Lyon et Montréal</dd>
-        </div>
-        <div class="studio-insight reveal-on-scroll" data-count="3200">
-            <dt>3200</dt>
-            <dd>photographies livrées avec retouches colorimétriques</dd>
-        </div>
-        <div class="studio-insight reveal-on-scroll" data-count="28">
-            <dt>28</dt>
-            <dd>expositions collectives &amp; installations artistiques</dd>
-        </div>
+        <% if (studioInsights && studioInsights.length > 0) { %>
+            <% studioInsights.forEach(insight => { %>
+                <div class="studio-insight reveal-on-scroll" data-count="<%= insight.data_count || 0 %>">
+                    <dt><%= insight.stat_value %></dt>
+                    <dd><%= insight.stat_caption %></dd>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="studio-insight reveal-on-scroll" data-count="12">
+                <dt>12</dt>
+                <dd>années de reportages et de créations sur-mesure</dd>
+            </div>
+            <div class="studio-insight reveal-on-scroll" data-count="180">
+                <dt>180</dt>
+                <dd>clients accompagnés entre Paris, Lyon et Montréal</dd>
+            </div>
+            <div class="studio-insight reveal-on-scroll" data-count="3200">
+                <dt>3200</dt>
+                <dd>photographies livrées avec retouches colorimétriques</dd>
+            </div>
+            <div class="studio-insight reveal-on-scroll" data-count="28">
+                <dt>28</dt>
+                <dd>expositions collectives &amp; installations artistiques</dd>
+            </div>
+        <% } %>
     </dl>
     <div class="studio-insights__cta">
         <p>Envie d'écrire votre histoire visuelle&nbsp;? Partagez votre projet et construisons un univers qui vous ressemble.</p>

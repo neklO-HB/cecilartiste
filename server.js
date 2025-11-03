@@ -58,6 +58,12 @@ const navCategoriesStatement = db.prepare(
 const categoryBySlugStatement = db.prepare(
   'SELECT * FROM categories WHERE slug = ?'
 );
+const studioInsightsStatement = db.prepare(
+  'SELECT id, stat_value, stat_caption, data_count, position FROM studio_insights ORDER BY position ASC, id ASC'
+);
+const studioInsightByIdStatement = db.prepare(
+  'SELECT id FROM studio_insights WHERE id = ?'
+);
 
 function generateCategorySlug(name, excludeId = null) {
   const base = slugify(name) || 'categorie';
@@ -150,6 +156,18 @@ function photoUpload(field) {
   };
 }
 
+function photoUploadMultiple(field, maxCount = 20) {
+  return (req, res, next) => {
+    upload.array(field, maxCount)(req, res, err => {
+      if (err) {
+        req.session.flash = { errors: [err.message] };
+        return res.redirect('/admin');
+      }
+      return next();
+    });
+  };
+}
+
 function optionalUpload(field, redirectHash = '') {
   return (req, res, next) => {
     upload.single(field)(req, res, err => {
@@ -189,6 +207,18 @@ function requireAuth(req, res, next) {
   return next();
 }
 
+function getStudioInsights() {
+  return studioInsightsStatement.all().map(insight => {
+    const parsedCount = Number.parseInt(insight.data_count, 10);
+    return {
+      ...insight,
+      stat_value: (insight.stat_value || '').trim(),
+      stat_caption: (insight.stat_caption || '').trim(),
+      data_count: Number.isNaN(parsedCount) ? 0 : parsedCount,
+    };
+  });
+}
+
 app.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -204,6 +234,7 @@ app.get(
         hero_image_path: normalizePublicPath(category.hero_image_path),
       }));
     const experiences = experiencesService.getAllExperiences(db);
+    const studioInsights = getStudioInsights();
     const heroSettings = db
       .prepare(
         'SELECT hero_intro_heading, hero_intro_subheading, hero_intro_body, hero_intro_image_url FROM settings WHERE id = 1'
@@ -224,6 +255,7 @@ app.get(
       categories,
       heroIntro,
       experiences,
+      studioInsights,
     });
   })
 );
@@ -412,6 +444,7 @@ app.get(
         hero_image_path: normalizePublicPath(category.hero_image_path),
       }));
     const experiences = experiencesService.getAllExperiences(db);
+    const studioInsights = getStudioInsights();
     const settings = db
       .prepare(
         'SELECT contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body, hero_intro_image_url FROM settings WHERE id = 1'
@@ -438,6 +471,7 @@ app.get(
       photos,
       categories,
       experiences,
+      studioInsights,
       contactEmail,
       heroIntro,
       messages,
@@ -479,7 +513,7 @@ app.post(
 app.post(
   '/admin/photos',
   requireAuth,
-  photoUpload('photo'),
+  photoUploadMultiple('photos'),
   asyncHandler(async (req, res) => {
     const {
       title = '',
@@ -488,6 +522,7 @@ app.post(
       category_id: rawCategoryId = '',
     } = req.body;
     const errors = [];
+    const files = Array.isArray(req.files) ? req.files : [];
 
     if (!title.trim()) {
       errors.push('Le titre est requis pour ajouter une photo.');
@@ -510,32 +545,49 @@ app.post(
       }
     }
 
-    if (!req.file) {
+    if (!files.length) {
       errors.push('Merci de sélectionner une image à téléverser.');
     }
 
     if (errors.length > 0) {
-      if (req.file) {
-        deleteFileIfExists(`/uploads/${req.file.filename}`);
-      }
+      files.forEach(file => {
+        if (file?.filename) {
+          deleteFileIfExists(`/uploads/${file.filename}`);
+        }
+      });
       req.session.flash = { errors };
-      return res.redirect('/admin');
+      return res.redirect('/admin#add-photo');
     }
 
-    const relativePath = `/uploads/${req.file.filename}`;
+    const sanitizedTitle = title.trim();
+    const sanitizedDescription = description.trim();
+    const sanitizedAccent = accent_color.trim() || '#ff6f61';
+    const insertStatement = db.prepare(
+      'INSERT INTO photos (title, description, image_path, accent_color, category_id) VALUES (?, ?, ?, ?, ?)'
+    );
 
-    db
-      .prepare('INSERT INTO photos (title, description, image_path, accent_color, category_id) VALUES (?, ?, ?, ?, ?)')
-      .run(
-        title.trim(),
-        description.trim(),
+    files.forEach((file, index) => {
+      const relativePath = `/uploads/${file.filename}`;
+      const photoTitle =
+        files.length === 1 || index === 0
+          ? sanitizedTitle
+          : `${sanitizedTitle} (${index + 1})`;
+      insertStatement.run(
+        photoTitle,
+        sanitizedDescription,
         relativePath,
-        accent_color.trim() || '#ff6f61',
+        sanitizedAccent,
         categoryValue
       );
+    });
 
-    req.session.flash = { success: 'La photo a été ajoutée avec succès.' };
-    return res.redirect('/admin');
+    const successMessage =
+      files.length > 1
+        ? `${files.length} photos ont été ajoutées avec succès.`
+        : 'La photo a été ajoutée avec succès.';
+
+    req.session.flash = { success: successMessage };
+    return res.redirect('/admin#add-photo');
   })
 );
 
@@ -943,6 +995,134 @@ app.post(
 
     req.session.flash = { success: "L'expérience a été supprimée." };
     return res.redirect('/admin#experiences');
+  })
+);
+
+app.post(
+  '/admin/studio-insights',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const {
+      stat_value: rawValue = '',
+      stat_caption: rawCaption = '',
+      data_count: rawCount = '',
+      position: rawPosition = '',
+    } = req.body;
+
+    const errors = [];
+    const statValue = rawValue.trim();
+    const statCaption = rawCaption.trim();
+
+    if (!statValue) {
+      errors.push('Merci de renseigner la valeur à afficher.');
+    }
+
+    if (!statCaption) {
+      errors.push('Merci de renseigner la description de votre statistique.');
+    }
+
+    if (errors.length > 0) {
+      req.session.flash = { errors };
+      return res.redirect('/admin#studio-insights');
+    }
+
+    const parsedCount = Number.parseInt(rawCount, 10);
+    const fallbackCount = Number.parseInt(statValue.replace(/[^0-9]/g, ''), 10);
+    const dataCount = Number.isNaN(parsedCount)
+      ? Number.isNaN(fallbackCount)
+        ? 0
+        : fallbackCount
+      : Math.max(parsedCount, 0);
+    const parsedPosition = Number.parseInt(rawPosition, 10);
+    const position = Number.isNaN(parsedPosition) ? 0 : parsedPosition;
+
+    db.prepare(
+      'INSERT INTO studio_insights (stat_value, stat_caption, data_count, position) VALUES (?, ?, ?, ?)'
+    ).run(statValue, statCaption, dataCount, position);
+
+    req.session.flash = { success: 'La statistique a été ajoutée avec succès.' };
+    return res.redirect('/admin#studio-insights');
+  })
+);
+
+app.post(
+  '/admin/studio-insights/:id',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const insightId = Number.parseInt(req.params.id, 10);
+    const {
+      stat_value: rawValue = '',
+      stat_caption: rawCaption = '',
+      data_count: rawCount = '',
+      position: rawPosition = '',
+    } = req.body;
+    const errors = [];
+
+    if (!Number.isInteger(insightId) || insightId <= 0) {
+      errors.push('Statistique introuvable.');
+    }
+
+    const existing = studioInsightByIdStatement.get(insightId);
+    if (!existing) {
+      errors.push('Cette statistique est introuvable.');
+    }
+
+    const statValue = rawValue.trim();
+    const statCaption = rawCaption.trim();
+
+    if (!statValue) {
+      errors.push('Merci de renseigner la valeur à afficher.');
+    }
+
+    if (!statCaption) {
+      errors.push('Merci de renseigner la description de votre statistique.');
+    }
+
+    if (errors.length > 0) {
+      req.session.flash = { errors };
+      return res.redirect('/admin#studio-insights');
+    }
+
+    const parsedCount = Number.parseInt(rawCount, 10);
+    const fallbackCount = Number.parseInt(statValue.replace(/[^0-9]/g, ''), 10);
+    const dataCount = Number.isNaN(parsedCount)
+      ? Number.isNaN(fallbackCount)
+        ? 0
+        : fallbackCount
+      : Math.max(parsedCount, 0);
+    const parsedPosition = Number.parseInt(rawPosition, 10);
+    const position = Number.isNaN(parsedPosition) ? 0 : parsedPosition;
+
+    db.prepare(
+      'UPDATE studio_insights SET stat_value = ?, stat_caption = ?, data_count = ?, position = ? WHERE id = ?'
+    ).run(statValue, statCaption, dataCount, position, insightId);
+
+    req.session.flash = { success: 'La statistique a été mise à jour.' };
+    return res.redirect('/admin#studio-insights');
+  })
+);
+
+app.post(
+  '/admin/studio-insights/:id/delete',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const insightId = Number.parseInt(req.params.id, 10);
+
+    if (!Number.isInteger(insightId) || insightId <= 0) {
+      req.session.flash = { errors: ['Statistique introuvable.'] };
+      return res.redirect('/admin#studio-insights');
+    }
+
+    const existing = studioInsightByIdStatement.get(insightId);
+    if (!existing) {
+      req.session.flash = { errors: ['Cette statistique est introuvable.'] };
+      return res.redirect('/admin#studio-insights');
+    }
+
+    db.prepare('DELETE FROM studio_insights WHERE id = ?').run(insightId);
+
+    req.session.flash = { success: 'La statistique a été supprimée.' };
+    return res.redirect('/admin#studio-insights');
   })
 );
 
