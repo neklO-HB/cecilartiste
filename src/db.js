@@ -65,6 +65,14 @@ const migrations = [
     position INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS studio_insights (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stat_value TEXT NOT NULL,
+    stat_caption TEXT NOT NULL,
+    data_count INTEGER NOT NULL DEFAULT 0,
+    position INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     contact_email TEXT NOT NULL,
@@ -259,6 +267,41 @@ function prepareDatabase() {
       db.prepare(
         'INSERT INTO experiences (title, description, icon, position) VALUES (?, ?, ?, ?)'
       ).run(experience.title, experience.description, experience.icon, index);
+    });
+  }
+
+  const defaultInsights = [
+    {
+      stat_value: '12',
+      stat_caption: 'années de reportages et de créations sur-mesure',
+      data_count: 12,
+    },
+    {
+      stat_value: '180',
+      stat_caption: 'clients accompagnés entre Paris, Lyon et Montréal',
+      data_count: 180,
+    },
+    {
+      stat_value: '3200',
+      stat_caption: 'photographies livrées avec retouches colorimétriques',
+      data_count: 3200,
+    },
+    {
+      stat_value: '28',
+      stat_caption: 'expositions collectives & installations artistiques',
+      data_count: 28,
+    },
+  ];
+
+  const { count: insightCount } = db
+    .prepare('SELECT COUNT(*) AS count FROM studio_insights')
+    .get();
+
+  if (insightCount === 0) {
+    defaultInsights.forEach((insight, index) => {
+      db.prepare(
+        'INSERT INTO studio_insights (stat_value, stat_caption, data_count, position) VALUES (?, ?, ?, ?)'
+      ).run(insight.stat_value, insight.stat_caption, insight.data_count, index);
     });
   }
 }

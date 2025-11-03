@@ -16,6 +16,7 @@
         <button type="button" class="button-secondary" data-admin-target="categories">Catégories</button>
         <button type="button" class="button-secondary" data-admin-target="hero-intro">Présentation</button>
         <button type="button" class="button-secondary" data-admin-target="experiences">Expériences</button>
+        <button type="button" class="button-secondary" data-admin-target="studio-insights">Chiffres du studio</button>
         <button type="button" class="button-secondary" data-admin-target="contact-settings">Contact</button>
         <button type="button" class="button-secondary" data-admin-target="messages">Messages</button>
     </nav>
@@ -37,6 +38,7 @@
                 <div>
                     <label for="title">Titre</label>
                     <input type="text" id="title" name="title" required>
+                    <small>Ce titre nommera la série. Pour plusieurs images, un numéro sera ajouté automatiquement.</small>
                 </div>
                 <div>
                     <label for="description">Description</label>
@@ -58,8 +60,9 @@
                     </select>
                 </div>
                 <div>
-                    <label for="photo">Image</label>
-                    <input type="file" id="photo" name="photo" accept="image/*" required>
+                    <label for="photos">Images</label>
+                    <input type="file" id="photos" name="photos" accept="image/*" multiple required>
+                    <small>Sélectionnez une ou plusieurs photos depuis votre téléphone ou votre ordinateur.</small>
                 </div>
                 <button type="submit" class="button-primary">Ajouter</button>
             </form>
@@ -176,6 +179,80 @@
                                             </div>
                                         </form>
                                         <form class="admin-form admin-form--delete" method="post" action="/admin/experiences/<%= experience.id %>/delete" onsubmit="return confirm('Supprimer cette expérience ?');">
+                                            <button type="submit" class="button-danger">Supprimer</button>
+                                        </form>
+                                    </div>
+                                </article>
+                            <% }) %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-card admin-card--wide" id="studio-insights" data-admin-section="studio-insights">
+            <h2>Chiffres clés du studio</h2>
+            <p>Modifiez les statistiques affichées dans la section «&nbsp;Le studio en chiffres&nbsp;» de la page d'accueil.</p>
+            <div class="studio-insights-manager">
+                <div class="studio-insights-manager__column">
+                    <h3>Ajouter une statistique</h3>
+                    <form class="admin-form" method="post" action="/admin/studio-insights">
+                        <div>
+                            <label for="insight_stat_value">Valeur affichée</label>
+                            <input type="text" id="insight_stat_value" name="stat_value" required>
+                            <small>Exemple&nbsp;: 12, 3 200 ou 95%.</small>
+                        </div>
+                        <div>
+                            <label for="insight_stat_caption">Description</label>
+                            <textarea id="insight_stat_caption" name="stat_caption" rows="2" required></textarea>
+                        </div>
+                        <div>
+                            <label for="insight_data_count">Valeur numérique (animation)</label>
+                            <input type="number" id="insight_data_count" name="data_count" min="0" placeholder="0">
+                            <small>Utilisée pour l'animation du compteur. Laissez vide pour détecter automatiquement.</small>
+                        </div>
+                        <div>
+                            <label for="insight_position">Position</label>
+                            <input type="number" id="insight_position" name="position" placeholder="0">
+                            <small>Ordre d'affichage (plus petit = plus à gauche).</small>
+                        </div>
+                        <button type="submit" class="button-primary">Ajouter</button>
+                    </form>
+                </div>
+                <div class="studio-insights-manager__column">
+                    <h3>Statistiques existantes</h3>
+                    <% if (!studioInsights || studioInsights.length === 0) { %>
+                        <p>Aucune statistique n'est enregistrée pour le moment. Ajoutez vos chiffres clés pour les mettre en avant.</p>
+                    <% } else { %>
+                        <div class="studio-insights-list">
+                            <% studioInsights.forEach(insight => { %>
+                                <article class="studio-insights-item">
+                                    <div class="studio-insights-item__value"><%= insight.stat_value %></div>
+                                    <div class="studio-insights-item__content">
+                                        <form class="admin-form" method="post" action="/admin/studio-insights/<%= insight.id %>">
+                                            <div>
+                                                <label for="stat_value_<%= insight.id %>">Valeur affichée</label>
+                                                <input type="text" id="stat_value_<%= insight.id %>" name="stat_value" required value="<%= insight.stat_value %>">
+                                            </div>
+                                            <div>
+                                                <label for="stat_caption_<%= insight.id %>">Description</label>
+                                                <textarea id="stat_caption_<%= insight.id %>" name="stat_caption" rows="2" required><%= insight.stat_caption %></textarea>
+                                            </div>
+                                            <div class="studio-insights-item__grid">
+                                                <div>
+                                                    <label for="data_count_<%= insight.id %>">Valeur numérique</label>
+                                                    <input type="number" id="data_count_<%= insight.id %>" name="data_count" min="0" value="<%= insight.data_count %>">
+                                                </div>
+                                                <div>
+                                                    <label for="position_<%= insight.id %>">Position</label>
+                                                    <input type="number" id="position_<%= insight.id %>" name="position" value="<%= typeof insight.position === 'number' ? insight.position : '' %>">
+                                                </div>
+                                            </div>
+                                            <div class="admin-photo-actions">
+                                                <button type="submit" class="button-secondary">Enregistrer</button>
+                                            </div>
+                                        </form>
+                                        <form class="admin-form admin-form--delete" method="post" action="/admin/studio-insights/<%= insight.id %>/delete" onsubmit="return confirm('Supprimer cette statistique&nbsp;?');">
                                             <button type="submit" class="button-danger">Supprimer</button>
                                         </form>
                                     </div>
