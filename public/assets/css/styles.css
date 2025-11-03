@@ -829,83 +829,6 @@ html.theme-pastel .experience-ribbon__media {
     color: var(--accent-color);
 }
 
-.process-section {
-    margin: 5rem 0 4rem;
-    display: grid;
-    gap: 2.4rem;
-}
-
-.process-section__intro {
-    max-width: 560px;
-}
-
-.process-section__intro h2 {
-    margin: 0 0 0.8rem;
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 4vw, 3rem);
-}
-
-.process-section__intro p {
-    margin: 0;
-    color: var(--text-secondary);
-    line-height: 1.7;
-}
-
-.process-steps {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 1.4rem;
-}
-
-.process-step {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1.5rem;
-    align-items: center;
-    padding: 1.6rem 2rem;
-    border-radius: calc(var(--radius-medium) + 10px);
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.35));
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
-    transition: transform var(--transition), box-shadow var(--transition);
-}
-
-html.theme-chromatique .process-step {
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.78), rgba(255, 60, 172, 0.15));
-}
-
-html.theme-pastel .process-step {
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.9), rgba(189, 224, 254, 0.22));
-}
-
-.process-step__index {
-    font-size: 2.1rem;
-    font-weight: 700;
-    font-family: var(--font-display);
-    color: var(--accent-color);
-    line-height: 1;
-}
-
-.process-step h3 {
-    margin: 0 0 0.35rem;
-    font-size: 1.3rem;
-    font-family: var(--font-display);
-}
-
-.process-step p {
-    margin: 0;
-    color: var(--text-secondary);
-    line-height: 1.6;
-}
-
-.process-step:hover,
-.process-step:focus-within,
-.process-step.is-visible {
-    transform: translateY(-4px);
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.18);
-}
-
 .photo-viewer {
     position: relative;
     margin: 4rem calc(-1 * clamp(1.5rem, 4vw, 4rem));
@@ -1369,93 +1292,6 @@ html.theme-pastel .photo-viewer__item {
     max-width: 520px;
     color: var(--text-secondary);
 }
-.editorial-showcase {
-    margin: 4.5rem 0 5rem;
-    display: grid;
-    gap: 2.6rem;
-}
-
-.editorial-showcase__intro {
-    max-width: 620px;
-}
-
-.editorial-showcase__intro h2 {
-    margin: 0 0 0.8rem;
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 4vw, 3rem);
-}
-
-.editorial-showcase__intro p {
-    margin: 0;
-    line-height: 1.7;
-    color: var(--text-secondary);
-}
-
-.editorial-showcase__panels {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.4rem;
-}
-
-.editorial-panel {
-    position: relative;
-    padding: 2rem;
-    border-radius: calc(var(--radius-large) - 6px);
-    color: #fff;
-    min-height: 220px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    overflow: hidden;
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.25);
-    transition: transform var(--transition), box-shadow var(--transition);
-}
-
-.editorial-panel::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.35), transparent 55%);
-    mix-blend-mode: screen;
-}
-
-.editorial-panel p {
-    position: relative;
-    margin: 0;
-    z-index: 1;
-    font-size: 0.95rem;
-    line-height: 1.6;
-}
-
-.editorial-panel__label {
-    position: relative;
-    z-index: 1;
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 0.6rem;
-}
-
-.editorial-panel--glow {
-    background: linear-gradient(135deg, #372bfd, #ff6f61);
-}
-
-.editorial-panel--flora {
-    background: linear-gradient(140deg, #0bab64, #3bb78f, #d9ed92);
-}
-
-.editorial-panel--portrait {
-    background: linear-gradient(125deg, #0b1026, #312e81, #ff9671);
-}
-
-.editorial-panel:hover,
-.editorial-panel:focus-within,
-.editorial-panel.is-visible {
-    transform: translateY(-6px);
-    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.3);
-}
-
 .gallery-section {
     display: grid;
     gap: 1.8rem;
@@ -2406,19 +2242,6 @@ html.theme-pastel .admin-photo-item {
         padding: 1.8rem 1.6rem;
     }
 
-    .process-step {
-        grid-template-columns: 1fr;
-        text-align: left;
-    }
-
-    .process-step__index {
-        justify-self: start;
-    }
-
-    .editorial-showcase__panels {
-        grid-template-columns: 1fr;
-    }
-
     .studio-insights {
         padding: 2rem 1.5rem;
     }
@@ -2577,13 +2400,8 @@ html.theme-pastel .admin-photo-item {
         padding: 1.6rem 1.4rem;
     }
 
-    .process-section__intro,
     .studio-insights__intro {
         text-align: center;
-    }
-
-    .process-step {
-        gap: 1.2rem;
     }
 
     .studio-insights {
