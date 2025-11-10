@@ -5,10 +5,18 @@ let DatabaseConstructor;
 let usingBetterSqlite = false;
 
 try {
-  DatabaseConstructor = require('better-sqlite3');
-  usingBetterSqlite = true;
-} catch (error) {
   ({ DatabaseSync: DatabaseConstructor } = require('node:sqlite'));
+} catch (sqliteError) {
+  try {
+    DatabaseConstructor = require('better-sqlite3');
+    usingBetterSqlite = true;
+  } catch (betterSqliteError) {
+    const combinedError = new Error(
+      'Impossible de charger un moteur SQLite compatible. Assurez-vous que "node:sqlite" ou "better-sqlite3" est disponible.'
+    );
+    combinedError.cause = { sqliteError, betterSqliteError };
+    throw combinedError;
+  }
 }
 
 const dbPath = path.join(__dirname, '..', 'data', 'cecilartiste.sqlite');
