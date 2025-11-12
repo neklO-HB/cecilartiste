@@ -26,26 +26,21 @@
         <div class="category-viewer__carousel" role="list">
             <% photos.forEach((photo, index) => { %>
                 <% const photoDescription = (photo.description || '').replace(/\r?\n/g, ' '); %>
-                <figure class="category-viewer__item" role="listitem" style="--category-viewer-accent: <%= photo.accent_color || '#ff6f61' %>; --category-viewer-index: <%= index %>" data-photo-index="<%= index %>" data-photo-src="<%= photo.image_path %>" data-photo-title="<%= photo.title %>" data-photo-description="<%= photoDescription %>">
+                <% const photoAlt = ((photo.description || '').split(/\r?\n/).find(Boolean) || 'Photographie du portfolio').trim(); %>
+                <figure class="category-viewer__item" role="listitem" style="--category-viewer-accent: <%= photo.accent_color || '#ff6f61' %>; --category-viewer-index: <%= index %>" data-photo-index="<%= index %>" data-photo-src="<%= photo.image_path %>" data-photo-description="<%= photoDescription %>" data-photo-alt="<%= photoAlt %>">
                     <div class="category-viewer__image-wrapper">
-                        <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
+                        <img src="<%= photo.image_path %>" alt="<%= photoAlt %>">
                         <span class="category-viewer__glow" aria-hidden="true"></span>
                     </div>
-                    <figcaption class="category-viewer__caption">
-                        <h3><%= photo.title %></h3>
-                        <% if (photo.description) { %>
-                            <p><%- nl2br(photo.description) %></p>
-                        <% } %>
-                    </figcaption>
-                    <button type="button" class="category-viewer__trigger" aria-label="Ouvrir la photo &laquo;&nbsp;<%= photo.title %>&nbsp;&raquo; en plein écran">
-                        <span class="sr-only">Afficher la photo <%= photo.title %> dans la visionneuse</span>
+                    <button type="button" class="category-viewer__trigger" aria-label="Ouvrir la photo en plein écran">
+                        <span class="sr-only">Afficher cette photo dans la visionneuse</span>
                     </button>
                 </figure>
             <% }) %>
         </div>
         <div id="gallery-lightbox" class="gallery-lightbox" hidden aria-hidden="true">
             <div class="gallery-lightbox__overlay" data-gallery-close></div>
-            <div class="gallery-lightbox__dialog" role="dialog" aria-modal="true" aria-labelledby="gallery-lightbox-title">
+            <div class="gallery-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Visionneuse photo">
                 <button type="button" class="gallery-lightbox__nav gallery-lightbox__nav--prev" aria-label="Photo précédente">
                     <span aria-hidden="true">‹</span>
                 </button>
@@ -55,7 +50,6 @@
                         <div class="gallery-lightbox__meta">
                             <p class="gallery-lightbox__counter" aria-live="polite"></p>
                         </div>
-                        <h3 id="gallery-lightbox-title" class="gallery-lightbox__title"></h3>
                         <p class="gallery-lightbox__description"></p>
                     </figcaption>
                 </figure>

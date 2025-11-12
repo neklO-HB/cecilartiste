@@ -165,14 +165,9 @@
     </div>
     <div class="photo-viewer__carousel">
         <% photos.forEach(photo => { %>
+            <% const photoAlt = ((photo.description || '').split(/\r?\n/).find(Boolean) || 'Photographie du portfolio').trim(); %>
             <figure class="photo-viewer__item" style="--photo-accent: <%= photo.accent_color || '#ff6f61' %>;">
-                <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
-                <figcaption class="photo-viewer__caption">
-                    <h3><%= photo.title %></h3>
-                    <% if (photo.description) { %>
-                        <p><%- nl2br(photo.description) %></p>
-                    <% } %>
-                </figcaption>
+                <img src="<%= photo.image_path %>" alt="<%= photoAlt %>">
             </figure>
         <% }) %>
     </div>

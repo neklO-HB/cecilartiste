@@ -1,4 +1,7 @@
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const { spawn } = require('child_process');
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
@@ -141,6 +144,13 @@ const upload = multer({
   },
 });
 
+const backupUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 200 * 1024 * 1024,
+  },
+});
+
 function photoUpload(field) {
   return (req, res, next) => {
     upload.single(field)(req, res, err => {
@@ -202,6 +212,304 @@ function requireAuth(req, res, next) {
     return res.redirect('/admin');
   }
   return next();
+}
+
+function copyDirectory(source, destination) {
+  if (!fs.existsSync(source)) {
+    return;
+  }
+
+  fs.mkdirSync(destination, { recursive: true });
+  const entries = fs.readdirSync(source, { withFileTypes: true });
+
+  entries.forEach(entry => {
+    const sourcePath = path.join(source, entry.name);
+    const destinationPath = path.join(destination, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectory(sourcePath, destinationPath);
+    } else if (entry.isFile()) {
+      const destinationDir = path.dirname(destinationPath);
+      fs.mkdirSync(destinationDir, { recursive: true });
+      fs.copyFileSync(sourcePath, destinationPath);
+    }
+  });
+}
+
+function runTar(args, options = {}) {
+  return new Promise((resolve, reject) => {
+    const tarProcess = spawn('tar', args, options);
+
+    tarProcess.on('error', error => {
+      reject(error);
+    });
+
+    tarProcess.on('close', code => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`La commande tar a échoué (code ${code}).`));
+      }
+    });
+  });
+}
+
+function collectBackupData() {
+  const photos = db
+    .prepare(
+      'SELECT id, title, description, image_path, palette, accent_color, category_id, created_at FROM photos ORDER BY id ASC'
+    )
+    .all()
+    .map(photo => ({
+      ...photo,
+      image_path: normalizePublicPath(photo.image_path),
+    }));
+
+  const categories = db
+    .prepare(
+      'SELECT id, name, description, hero_image_path, position, slug, created_at FROM categories ORDER BY id ASC'
+    )
+    .all()
+    .map(category => ({
+      ...category,
+      hero_image_path: normalizePublicPath(category.hero_image_path),
+    }));
+
+  const experiences = db
+    .prepare(
+      'SELECT id, title, description, icon, image_path, position, created_at FROM experiences ORDER BY id ASC'
+    )
+    .all()
+    .map(experience => ({
+      ...experience,
+      image_path: normalizePublicPath(experience.image_path),
+    }));
+
+  const studioInsights = db
+    .prepare(
+      'SELECT id, stat_value, stat_caption, data_count, position, created_at FROM studio_insights ORDER BY id ASC'
+    )
+    .all();
+
+  const settings =
+    db
+      .prepare(
+        'SELECT contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body, hero_intro_image_url FROM settings WHERE id = 1'
+      )
+      .get() || {};
+
+  const messages = db
+    .prepare('SELECT id, name, email, subject, message, created_at FROM contact_messages ORDER BY id ASC')
+    .all();
+
+  return {
+    version: 1,
+    generated_at: new Date().toISOString(),
+    photos,
+    categories,
+    experiences,
+    studio_insights: studioInsights,
+    settings,
+    messages,
+  };
+}
+
+function ensureIntegerId(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error("Identifiant invalide rencontré dans la sauvegarde.");
+  }
+  return parsed;
+}
+
+function sanitizeNullableNumber(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isInteger(parsed)) {
+    return parsed;
+  }
+  return null;
+}
+
+function sanitizePosition(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) ? parsed : 0;
+}
+
+function replaceUploadsDirectory(source) {
+  const uploadsDir = path.join(__dirname, 'public', 'uploads');
+  const parentDir = path.dirname(uploadsDir);
+  const backupName = `uploads-backup-${Date.now()}`;
+  const backupDir = path.join(parentDir, backupName);
+  let previousDirectory = null;
+
+  if (fs.existsSync(uploadsDir)) {
+    fs.renameSync(uploadsDir, backupDir);
+    previousDirectory = backupDir;
+  }
+
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    if (source && fs.existsSync(source)) {
+      copyDirectory(source, uploadsDir);
+    }
+    if (previousDirectory) {
+      fs.rmSync(previousDirectory, { recursive: true, force: true });
+    }
+  } catch (error) {
+    if (fs.existsSync(uploadsDir)) {
+      fs.rmSync(uploadsDir, { recursive: true, force: true });
+    }
+    if (previousDirectory && fs.existsSync(previousDirectory)) {
+      fs.renameSync(previousDirectory, uploadsDir);
+    }
+    throw error;
+  }
+}
+
+function applyBackupData(data, extractedRoot) {
+  if (!data || typeof data !== 'object') {
+    throw new Error('La sauvegarde fournie est invalide.');
+  }
+
+  const categories = Array.isArray(data.categories) ? data.categories : [];
+  const photos = Array.isArray(data.photos) ? data.photos : [];
+  const experiences = Array.isArray(data.experiences) ? data.experiences : [];
+  const studioInsights = Array.isArray(data.studio_insights) ? data.studio_insights : [];
+  const messages = Array.isArray(data.messages) ? data.messages : [];
+  const settings = data.settings && typeof data.settings === 'object' ? data.settings : null;
+
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM photos').run();
+    db.prepare('DELETE FROM categories').run();
+    db.prepare('DELETE FROM experiences').run();
+    db.prepare('DELETE FROM studio_insights').run();
+    db.prepare('DELETE FROM contact_messages').run();
+    if (settings) {
+      db.prepare('DELETE FROM settings WHERE id = 1').run();
+    }
+
+    db.exec(
+      "DELETE FROM sqlite_sequence WHERE name IN ('photos','categories','experiences','studio_insights','contact_messages')"
+    );
+
+    const insertCategory = db.prepare(
+      'INSERT INTO categories (id, name, description, hero_image_path, position, slug, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    );
+    categories.forEach(category => {
+      const id = ensureIntegerId(category.id);
+      const name = String(category.name || '').trim();
+      if (!name) {
+        throw new Error('Une catégorie de la sauvegarde ne possède pas de nom.');
+      }
+      const slugValue = (category.slug || '').trim() || slugify(name);
+      insertCategory.run(
+        id,
+        name,
+        category.description || null,
+        normalizePublicPath(category.hero_image_path) || null,
+        sanitizePosition(category.position),
+        slugValue,
+        category.created_at || new Date().toISOString()
+      );
+    });
+
+    const insertPhoto = db.prepare(
+      'INSERT INTO photos (id, title, description, image_path, palette, accent_color, category_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    photos.forEach(photo => {
+      const id = ensureIntegerId(photo.id);
+      const title = String(photo.title || '').trim() || 'Photographie du portfolio';
+      const imagePath = normalizePublicPath(photo.image_path);
+      if (!imagePath) {
+        throw new Error('Une photo de la sauvegarde ne contient pas de chemin d\'image.');
+      }
+      insertPhoto.run(
+        id,
+        title,
+        photo.description || null,
+        imagePath,
+        photo.palette || 'vibrant',
+        (photo.accent_color || '#ff6f61').trim() || '#ff6f61',
+        sanitizeNullableNumber(photo.category_id),
+        photo.created_at || new Date().toISOString()
+      );
+    });
+
+    const insertExperience = db.prepare(
+      'INSERT INTO experiences (id, title, description, icon, image_path, position, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    );
+    experiences.forEach(experience => {
+      const id = ensureIntegerId(experience.id);
+      const title = String(experience.title || '').trim();
+      const description = String(experience.description || '').trim();
+      if (!title || !description) {
+        throw new Error('Une expérience de la sauvegarde est incomplète.');
+      }
+      insertExperience.run(
+        id,
+        title,
+        description,
+        experience.icon || null,
+        normalizePublicPath(experience.image_path) || null,
+        sanitizePosition(experience.position),
+        experience.created_at || new Date().toISOString()
+      );
+    });
+
+    const insertInsight = db.prepare(
+      'INSERT INTO studio_insights (id, stat_value, stat_caption, data_count, position, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    studioInsights.forEach(insight => {
+      const id = ensureIntegerId(insight.id);
+      insertInsight.run(
+        id,
+        String(insight.stat_value || '').trim(),
+        String(insight.stat_caption || '').trim(),
+        sanitizePosition(insight.data_count),
+        sanitizePosition(insight.position),
+        insight.created_at || new Date().toISOString()
+      );
+    });
+
+    const insertMessage = db.prepare(
+      'INSERT INTO contact_messages (id, name, email, subject, message, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    messages.forEach(message => {
+      const id = ensureIntegerId(message.id);
+      insertMessage.run(
+        id,
+        String(message.name || '').trim(),
+        String(message.email || '').trim(),
+        String(message.subject || '').trim(),
+        message.message || '',
+        message.created_at || new Date().toISOString()
+      );
+    });
+
+    if (settings) {
+      db
+        .prepare(
+          'INSERT INTO settings (id, contact_email, hero_intro_heading, hero_intro_subheading, hero_intro_body, hero_intro_image_url) VALUES (1, ?, ?, ?, ?, ?)'
+        )
+        .run(
+          (settings.contact_email || 'contact@cecilartiste.com').trim(),
+          settings.hero_intro_heading || 'Qui suis-je ?',
+          settings.hero_intro_subheading || 'Cécile, photographe professionnelle à Amiens',
+          settings.hero_intro_body ||
+            "Artiste photographe spécialisée dans les univers colorés, j’immortalise vos histoires à Amiens et partout où elles me portent.",
+          resolveHeroImageUrl(settings.hero_intro_image_url)
+        );
+    }
+
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+
+  const uploadsSource = path.join(extractedRoot, 'uploads');
+  replaceUploadsDirectory(uploadsSource);
 }
 
 function getStudioInsights() {
@@ -478,6 +786,101 @@ app.get(
   })
 );
 
+app.get(
+  '/admin/export',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cecilartiste-export-'));
+    const archiveRootName = 'cecilartiste-backup';
+    const archiveRoot = path.join(tempDir, archiveRootName);
+    const archivePath = path.join(tempDir, `${archiveRootName}.tar.gz`);
+
+    try {
+      fs.mkdirSync(archiveRoot, { recursive: true });
+      const backupData = collectBackupData();
+      fs.writeFileSync(path.join(archiveRoot, 'data.json'), JSON.stringify(backupData, null, 2), 'utf8');
+
+      const uploadsDir = path.join(__dirname, 'public', 'uploads');
+      if (fs.existsSync(uploadsDir)) {
+        copyDirectory(uploadsDir, path.join(archiveRoot, 'uploads'));
+      }
+
+      await runTar(['-czf', archivePath, '-C', tempDir, archiveRootName]);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const downloadName = `cecilartiste-backup-${timestamp}.tar.gz`;
+
+      await new Promise((resolve, reject) => {
+        res.download(archivePath, downloadName, err => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  })
+);
+
+app.post(
+  '/admin/import',
+  requireAuth,
+  backupUpload.single('backup'),
+  asyncHandler(async (req, res) => {
+    if (!req.file || !req.file.buffer || req.file.buffer.length === 0) {
+      req.session.flash = { errors: ['Merci de sélectionner une sauvegarde à importer.'] };
+      return res.redirect('/admin#backups');
+    }
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cecilartiste-import-'));
+    const archiveRootName = 'cecilartiste-backup';
+
+    try {
+      const archivePath = path.join(tempDir, 'import.tar.gz');
+      fs.writeFileSync(archivePath, req.file.buffer);
+      const extractDir = path.join(tempDir, 'extracted');
+      fs.mkdirSync(extractDir, { recursive: true });
+
+      await runTar(['-xzf', archivePath, '-C', extractDir]);
+
+      const extractedRoot = path.join(extractDir, archiveRootName);
+      if (!fs.existsSync(extractedRoot)) {
+        throw new Error("Le fichier transmis ne correspond pas à une sauvegarde Cecil'Artiste valide.");
+      }
+
+      const dataPath = path.join(extractedRoot, 'data.json');
+      if (!fs.existsSync(dataPath)) {
+        throw new Error('Le fichier data.json est introuvable dans la sauvegarde fournie.');
+      }
+
+      const rawData = fs.readFileSync(dataPath, 'utf8');
+      let parsedData;
+      try {
+        parsedData = JSON.parse(rawData);
+      } catch (error) {
+        throw new Error('Le contenu de la sauvegarde est illisible (JSON invalide).');
+      }
+
+      applyBackupData(parsedData, extractedRoot);
+      req.session.flash = { success: 'La sauvegarde a été importée avec succès.' };
+    } catch (error) {
+      console.error("Échec de l'import de sauvegarde :", error);
+      req.session.flash = {
+        errors: [
+          error.message ||
+            "La sauvegarde n’a pas pu être importée. Vérifiez le fichier et réessayez.",
+        ],
+      };
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+
+    return res.redirect('/admin#backups');
+  })
+);
+
 app.post(
   '/admin/login',
   asyncHandler(async (req, res) => {
@@ -513,17 +916,12 @@ app.post(
   photoUploadMultiple('photos'),
   asyncHandler(async (req, res) => {
     const {
-      title = '',
       description = '',
       accent_color = '#ff6f61',
       category_id: rawCategoryId = '',
     } = req.body;
     const errors = [];
     const files = Array.isArray(req.files) ? req.files : [];
-
-    if (!title.trim()) {
-      errors.push('Le titre est requis pour ajouter une photo.');
-    }
 
     const categoryId = Number.parseInt(rawCategoryId, 10);
     let categoryValue = null;
@@ -556,7 +954,6 @@ app.post(
       return res.redirect('/admin#add-photo');
     }
 
-    const sanitizedTitle = title.trim();
     const sanitizedDescription = description.trim();
     const sanitizedAccent = accent_color.trim() || '#ff6f61';
     const insertStatement = db.prepare(
@@ -565,10 +962,12 @@ app.post(
 
     files.forEach((file, index) => {
       const relativePath = `/uploads/${file.filename}`;
+      const baseName = path.parse(file.originalname || '').name.replace(/[_\s-]+/g, ' ').trim();
+      const normalizedTitle = baseName || 'Photographie du portfolio';
       const photoTitle =
         files.length === 1 || index === 0
-          ? sanitizedTitle
-          : `${sanitizedTitle} (${index + 1})`;
+          ? normalizedTitle
+          : `${normalizedTitle} (${index + 1})`;
       insertStatement.run(
         photoTitle,
         sanitizedDescription,
@@ -595,7 +994,6 @@ app.post(
   asyncHandler(async (req, res) => {
     const photoId = Number.parseInt(req.params.id, 10);
     const {
-      title = '',
       description = '',
       accent_color = '#ff6f61',
       category_id: rawCategoryId = '',
@@ -606,11 +1004,7 @@ app.post(
       errors.push('Photo introuvable.');
     }
 
-    if (!title.trim()) {
-      errors.push('Merci de renseigner un titre.');
-    }
-
-    const existing = db.prepare('SELECT image_path FROM photos WHERE id = ?').get(photoId);
+    const existing = db.prepare('SELECT image_path, title FROM photos WHERE id = ?').get(photoId);
     if (!existing) {
       errors.push('Photo inexistante.');
     }
@@ -638,12 +1032,17 @@ app.post(
       return res.redirect('/admin');
     }
 
+    const fallbackTitle = existing?.title?.trim() || 'Photographie du portfolio';
+
     if (req.file) {
       const newPath = `/uploads/${req.file.filename}`;
+      const derivedTitle = req.file.originalname
+        ? path.parse(req.file.originalname).name.replace(/[_\s-]+/g, ' ').trim() || fallbackTitle
+        : fallbackTitle;
       db
         .prepare('UPDATE photos SET title = ?, description = ?, accent_color = ?, category_id = ?, image_path = ? WHERE id = ?')
         .run(
-          title.trim(),
+          derivedTitle,
           description.trim(),
           accent_color.trim() || '#ff6f61',
           categoryValue,
@@ -655,7 +1054,7 @@ app.post(
       db
         .prepare('UPDATE photos SET title = ?, description = ?, accent_color = ?, category_id = ? WHERE id = ?')
         .run(
-          title.trim(),
+          fallbackTitle,
           description.trim(),
           accent_color.trim() || '#ff6f61',
           categoryValue,

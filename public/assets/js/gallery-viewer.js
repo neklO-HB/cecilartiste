@@ -22,14 +22,13 @@
     const overlay = lightbox.querySelector('[data-gallery-close]');
     const dialog = lightbox.querySelector('.gallery-lightbox__dialog');
     const imageEl = lightbox.querySelector('.gallery-lightbox__image');
-    const titleEl = lightbox.querySelector('.gallery-lightbox__title');
     const descriptionEl = lightbox.querySelector('.gallery-lightbox__description');
     const counterEl = lightbox.querySelector('.gallery-lightbox__counter');
     const closeBtn = lightbox.querySelector('.gallery-lightbox__close');
     const prevBtn = lightbox.querySelector('.gallery-lightbox__nav--prev');
     const nextBtn = lightbox.querySelector('.gallery-lightbox__nav--next');
 
-    if (!overlay || !dialog || !imageEl || !titleEl || !descriptionEl || !counterEl || !closeBtn || !prevBtn || !nextBtn) {
+    if (!overlay || !dialog || !imageEl || !descriptionEl || !counterEl || !closeBtn || !prevBtn || !nextBtn) {
         return;
     }
 
@@ -58,7 +57,7 @@
 
         return {
             src: item.dataset.photoSrc || '',
-            title: item.dataset.photoTitle || '',
+            alt: item.dataset.photoAlt || 'Photographie du portfolio',
             description: item.dataset.photoDescription || ''
         };
     }
@@ -70,8 +69,7 @@
         }
 
         imageEl.src = data.src;
-        imageEl.alt = data.title || '';
-        titleEl.textContent = data.title || '';
+        imageEl.alt = data.alt || 'Photographie du portfolio';
 
         if (data.description) {
             descriptionEl.textContent = data.description;
