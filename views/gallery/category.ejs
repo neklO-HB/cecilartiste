@@ -23,7 +23,8 @@
         </p>
     </header>
     <% if (photos && photos.length > 0) { %>
-        <div class="category-viewer__carousel" role="list">
+        <div class="category-viewer__slider" data-category-slider>
+            <div class="category-viewer__carousel" data-slider-list role="list">
             <% photos.forEach((photo, index) => { %>
                 <% const photoDescription = (photo.description || '').replace(/\r?\n/g, ' '); %>
                 <% const photoAlt = ((photo.description || '').split(/\r?\n/).find(Boolean) || 'Photographie du portfolio').trim(); %>
@@ -37,6 +38,19 @@
                     </button>
                 </figure>
             <% }) %>
+            </div>
+            <p class="sr-only" aria-live="polite" data-slider-status></p>
+            <div class="category-viewer__progress" aria-hidden="true">
+                <span class="category-viewer__progress-indicator" data-slider-indicator></span>
+            </div>
+            <div class="category-viewer__controls" role="group" aria-label="Navigation du carrousel">
+                <button type="button" class="category-viewer__control category-viewer__control--prev" data-slider-prev aria-label="Photo précédente">
+                    <span aria-hidden="true">‹</span>
+                </button>
+                <button type="button" class="category-viewer__control category-viewer__control--next" data-slider-next aria-label="Photo suivante">
+                    <span aria-hidden="true">›</span>
+                </button>
+            </div>
         </div>
         <div id="gallery-lightbox" class="gallery-lightbox" hidden aria-hidden="true">
             <div class="gallery-lightbox__overlay" data-gallery-close></div>
