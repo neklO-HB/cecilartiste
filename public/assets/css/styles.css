@@ -1665,7 +1665,7 @@ html.theme-pastel .studio-insight {
 .photo-card img {
     width: 100%;
     border-radius: calc(var(--radius-large) - 8px);
-    height: 220px;
+    height: 200px;
     object-fit: cover;
 }
 
@@ -2674,8 +2674,8 @@ html.theme-pastel .admin-photo-item {
     }
 
     .photo-card img {
-        height: 190px;
-        margin-block: 8px;
+        height: 180px;
+        margin-block: 16px;
     }
 
     .identity-hero {
