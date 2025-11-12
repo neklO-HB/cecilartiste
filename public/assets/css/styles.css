@@ -2617,6 +2617,23 @@ html.theme-pastel .admin-photo-item {
     }
 }
 
+@media (max-width: 600px) {
+    .category-viewer__carousel {
+        grid-auto-columns: minmax(78vw, 1fr);
+        justify-items: center;
+        padding-inline: 0.5rem;
+    }
+
+    .category-viewer__item {
+        max-width: min(78vw, 380px);
+        margin-inline: auto;
+    }
+
+    .category-viewer__image-wrapper {
+        aspect-ratio: 4 / 5;
+    }
+}
+
 @media (max-width: 540px) {
     .site-header {
         padding: 1.4rem 1.25rem 0.9rem;
