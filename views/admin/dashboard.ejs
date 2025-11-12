@@ -19,6 +19,7 @@
         <button type="button" class="button-secondary" data-admin-target="studio-insights">Chiffres du studio</button>
         <button type="button" class="button-secondary" data-admin-target="contact-settings">Contact</button>
         <button type="button" class="button-secondary" data-admin-target="messages">Messages</button>
+        <button type="button" class="button-secondary" data-admin-target="backups">Sauvegardes</button>
     </nav>
 
     <% if (feedback) { %>
@@ -36,13 +37,9 @@
             <h2>Ajouter une nouvelle photo</h2>
             <form class="admin-form" method="post" action="/admin/photos" enctype="multipart/form-data">
                 <div>
-                    <label for="title">Titre</label>
-                    <input type="text" id="title" name="title" required>
-                    <small>Ce titre nommera la série. Pour plusieurs images, un numéro sera ajouté automatiquement.</small>
-                </div>
-                <div>
                     <label for="description">Description</label>
                     <textarea id="description" name="description" rows="4" placeholder="Décrivez l'histoire derrière cette image..."></textarea>
+                    <small>La première phrase sera utilisée comme texte alternatif accessible.</small>
                 </div>
                 <div>
                     <label for="accent_color">Couleur d'accent</label>
@@ -351,21 +348,18 @@
         <% } else { %>
             <div class="admin-photos">
                 <% photos.forEach(photo => { %>
+                    <% const photoAlt = ((photo.description || '').split(/\r?\n/).find(Boolean) || 'Photographie du portfolio').trim(); %>
                     <article class="admin-photo-item">
-                        <img src="<%= photo.image_path %>" alt="<%= photo.title %>">
+                        <img src="<%= photo.image_path %>" alt="<%= photoAlt %>">
                         <div>
-                            <h3><%= photo.title %></h3>
                             <% if (photo.description) { %>
                                 <p><%- nl2br(photo.description) %></p>
                             <% } %>
                             <form class="admin-form" method="post" action="/admin/photos/<%= photo.id %>" enctype="multipart/form-data">
                                 <div>
-                                    <label for="title_<%= photo.id %>">Titre</label>
-                                    <input type="text" id="title_<%= photo.id %>" name="title" required value="<%= photo.title %>">
-                                </div>
-                                <div>
                                     <label for="description_<%= photo.id %>">Description</label>
                                     <textarea id="description_<%= photo.id %>" name="description" rows="3"><%= photo.description || '' %></textarea>
+                                    <small>La première phrase deviendra le texte alternatif visible par les lecteurs d'écran.</small>
                                 </div>
                                 <div>
                                     <label for="accent_<%= photo.id %>">Couleur d'accent</label>
@@ -418,6 +412,27 @@
                 <% }) %>
             </ul>
         <% } %>
+    </section>
+
+    <section class="admin-card" id="backups" data-admin-section="backups">
+        <h2>Sauvegardes complètes</h2>
+        <p>
+            Téléchargez l'ensemble de vos données (photos, catégories, expériences, statistiques du studio et réglages)
+            ou importez une sauvegarde pour restaurer votre contenu.
+        </p>
+        <div class="admin-backups">
+            <form class="admin-form admin-form--inline" method="get" action="/admin/export">
+                <button type="submit" class="button-primary">Télécharger une sauvegarde</button>
+            </form>
+            <form class="admin-form admin-form--inline" method="post" action="/admin/import" enctype="multipart/form-data">
+                <div>
+                    <label for="backup">Importer une sauvegarde (.tar.gz)</label>
+                    <input type="file" id="backup" name="backup" accept="application/gzip,application/x-gtar,application/x-tgz,application/x-tar" required>
+                </div>
+                <button type="submit" class="button-secondary">Importer</button>
+            </form>
+            <p class="admin-backups__hint">L'import remplace les données actuelles. Pensez à sauvegarder avant.</p>
+        </div>
     </section>
     <script>
         (function () {
