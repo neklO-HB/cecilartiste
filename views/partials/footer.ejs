@@ -1,9 +1,18 @@
 </main>
 <footer class="site-footer">
-    <p>
-        <a href="/admin" class="site-footer__admin-link" aria-label="Accéder à l'administration">&copy;</a>
-        <%= new Date().getFullYear() %> Cecil'Artiste. Tous droits réservés.
-    </p>
+    <div class="site-footer__inner">
+        <p class="site-footer__legal">
+            <a href="/admin" class="site-footer__admin-link" aria-label="Accéder à l'administration">&copy;</a>
+            <%= new Date().getFullYear() %> Cecil'Artiste. Tous droits réservés.
+        </p>
+        <p class="site-footer__credits">
+            Site réalisé avec ❤️ par
+            <a href="https://dmcsolutions.fr" target="_blank" rel="noopener">DMCSolutions</a>
+            <span class="site-footer__credits-logo" aria-hidden="true">
+                <img src="https://i.postimg.cc/HnZwK6pX/LOGO-4.png" alt="Logo DMCSolutions">
+            </span>
+        </p>
+    </div>
 </footer>
 <button class="theme-switch" id="theme-switch" aria-label="Changer de thème" data-theme="vibrant">
     <span class="theme-switch__label">Palette
