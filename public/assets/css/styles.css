@@ -889,9 +889,7 @@ html.theme-pastel .experience-ribbon__media {
     position: relative;
     z-index: 1;
     margin-top: 2.2rem;
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(320px, min(70vw, 720px));
+    display: flex;
     gap: 1.8rem;
     overflow-x: auto;
     padding-bottom: 1.2rem;
@@ -914,10 +912,13 @@ html.theme-pastel .experience-ribbon__media {
     border-radius: calc(var(--radius-large) + 4px);
     overflow: hidden;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
     box-shadow: var(--shadow-soft);
     border: 1px solid rgba(255, 255, 255, 0.18);
     display: block;
     border-top: 4px solid var(--photo-accent, var(--accent-color));
+    width: clamp(320px, 70vw, 720px);
+    flex: 0 0 clamp(320px, 70vw, 720px);
 }
 
 html.theme-chromatique .photo-viewer__item {
@@ -2612,8 +2613,9 @@ html.theme-pastel .admin-photo-item {
         padding: 2.4rem 1.5rem 2.8rem;
     }
 
-    .photo-viewer__carousel {
-        grid-auto-columns: minmax(260px, 88vw);
+    .photo-viewer__item {
+        width: clamp(240px, 88vw, 520px);
+        flex: 0 0 clamp(240px, 88vw, 520px);
     }
 }
 
