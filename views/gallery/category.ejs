@@ -7,8 +7,6 @@
         <p>
             <% if (category.description) { %>
                 <%- nl2br(category.description) %>
-            <% } else { %>
-                Une ambiance à composer : ajoutez vos photos pour révéler la personnalité de cette collection.
             <% } %>
         </p>
         <span class="category-hero__badge"><%= category.photo_count %> photo<%= category.photo_count > 1 ? 's' : '' %> disponibles</span>
