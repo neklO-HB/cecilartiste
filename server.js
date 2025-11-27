@@ -28,8 +28,9 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Remove the default body size cap to avoid 413 errors behind reverse proxies.
-// Set BODY_SIZE_LIMIT env var (e.g. "100mb") to enforce a specific limit if needed.
-const BODY_SIZE_LIMIT = process.env.BODY_SIZE_LIMIT || Infinity;
+// Set BODY_SIZE_LIMIT env var (e.g. "500mb") to enforce a specific limit if needed.
+const BODY_SIZE_LIMIT = process.env.BODY_SIZE_LIMIT || '500mb';
+const MAX_UPLOAD_SIZE_BYTES = Number(process.env.MAX_UPLOAD_SIZE_BYTES) || 500 * 1024 * 1024; // 500 MB
 
 app.use(express.urlencoded({ extended: true, limit: BODY_SIZE_LIMIT }));
 app.use(express.json({ limit: BODY_SIZE_LIMIT }));
@@ -139,6 +140,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
+  limits: {
+    fileSize: MAX_UPLOAD_SIZE_BYTES,
+  },
   fileFilter: (req, file, cb) => {
     if (allowedMimes.has(file.mimetype)) {
       cb(null, true);
@@ -151,7 +155,7 @@ const upload = multer({
 const backupUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 200 * 1024 * 1024,
+    fileSize: MAX_UPLOAD_SIZE_BYTES,
   },
 });
 
@@ -1623,6 +1627,24 @@ app.post(
     return res.redirect('/admin');
   })
 );
+
+app.use((err, req, res, next) => {
+  if (
+    err?.status === 413 ||
+    err?.type === 'entity.too.large' ||
+    err?.code === 'LIMIT_FILE_SIZE'
+  ) {
+    req.session.flash = {
+      errors: [
+        "Le fichier envoyé est trop volumineux. Réduisez sa taille ou contactez l'administrateur pour augmenter la limite.",
+      ],
+    };
+    const redirectTarget = req.originalUrl.startsWith('/admin') ? '/admin' : '/';
+    return res.redirect(redirectTarget);
+  }
+
+  return next(err);
+});
 
 app.use((err, req, res, next) => {
   console.error(err);
