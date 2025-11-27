@@ -27,8 +27,12 @@ const DEFAULT_HERO_IMAGE_URL =
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// Remove the default body size cap to avoid 413 errors behind reverse proxies.
+// Set BODY_SIZE_LIMIT env var (e.g. "100mb") to enforce a specific limit if needed.
+const BODY_SIZE_LIMIT = process.env.BODY_SIZE_LIMIT || Infinity;
+
+app.use(express.urlencoded({ extended: true, limit: BODY_SIZE_LIMIT }));
+app.use(express.json({ limit: BODY_SIZE_LIMIT }));
 
 app.use(
   session({
