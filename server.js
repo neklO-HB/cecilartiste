@@ -1,10 +1,10 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { spawn } = require('child_process');
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
+const tar = require('tar');
 const db = require('./src/db');
 const { verifyPassword } = require('./src/passwords');
 const experiencesService = require('./src/experiences');
@@ -23,6 +23,7 @@ const port = process.env.PORT || 3000;
 
 const DEFAULT_HERO_IMAGE_URL =
   'https://i.postimg.cc/brcb2z8C/21314712-8c8f-4d76-829b-f9a4fc4ecb31.png';
+const BACKUP_ROOT_NAME = 'cecilartiste-backup';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -156,10 +157,21 @@ const upload = multer({
 });
 
 const backupUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: MAX_UPLOAD_SIZE_BYTES,
-  },
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      try {
+        const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'cecilartiste-backup-upload-'));
+        req.backupUploadDir = tempDirectory;
+        cb(null, tempDirectory);
+      } catch (error) {
+        cb(error);
+      }
+    },
+    filename: (req, file, cb) => {
+      const extension = path.extname(file.originalname) || '.tar.gz';
+      cb(null, `backup-${Date.now()}${extension}`);
+    },
+  }),
 });
 
 function photoUpload(field) {
@@ -247,21 +259,24 @@ function copyDirectory(source, destination) {
   });
 }
 
-function runTar(args, options = {}) {
-  return new Promise((resolve, reject) => {
-    const tarProcess = spawn('tar', args, options);
+async function createBackupArchive(rootDir, archivePath) {
+  await tar.c(
+    {
+      gzip: true,
+      file: archivePath,
+      cwd: rootDir,
+      portable: true,
+      noMtime: true,
+    },
+    [BACKUP_ROOT_NAME]
+  );
+}
 
-    tarProcess.on('error', error => {
-      reject(error);
-    });
-
-    tarProcess.on('close', code => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`La commande tar a échoué (code ${code}).`));
-      }
-    });
+async function extractBackupArchive(archivePath, destinationDir) {
+  await tar.x({
+    file: archivePath,
+    cwd: destinationDir,
+    strict: true,
   });
 }
 
@@ -802,9 +817,8 @@ app.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cecilartiste-export-'));
-    const archiveRootName = 'cecilartiste-backup';
-    const archiveRoot = path.join(tempDir, archiveRootName);
-    const archivePath = path.join(tempDir, `${archiveRootName}.tar.gz`);
+    const archiveRoot = path.join(tempDir, BACKUP_ROOT_NAME);
+    const archivePath = path.join(tempDir, `${BACKUP_ROOT_NAME}.tar.gz`);
 
     try {
       fs.mkdirSync(archiveRoot, { recursive: true });
@@ -816,7 +830,7 @@ app.get(
         copyDirectory(uploadsDir, path.join(archiveRoot, 'uploads'));
       }
 
-      await runTar(['-czf', archivePath, '-C', tempDir, archiveRootName]);
+      await createBackupArchive(tempDir, archivePath);
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const downloadName = `cecilartiste-backup-${timestamp}.tar.gz`;
 
@@ -840,23 +854,23 @@ app.post(
   requireAuth,
   backupUpload.single('backup'),
   asyncHandler(async (req, res) => {
-    if (!req.file || !req.file.buffer || req.file.buffer.length === 0) {
+    const archivePath = req.file?.path;
+    const archiveSize = req.file?.size || 0;
+
+    if (!archivePath || archiveSize === 0) {
       req.session.flash = { errors: ['Merci de sélectionner une sauvegarde à importer.'] };
       return res.redirect('/admin#backups');
     }
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cecilartiste-import-'));
-    const archiveRootName = 'cecilartiste-backup';
 
     try {
-      const archivePath = path.join(tempDir, 'import.tar.gz');
-      fs.writeFileSync(archivePath, req.file.buffer);
       const extractDir = path.join(tempDir, 'extracted');
       fs.mkdirSync(extractDir, { recursive: true });
 
-      await runTar(['-xzf', archivePath, '-C', extractDir]);
+      await extractBackupArchive(archivePath, extractDir);
 
-      const extractedRoot = path.join(extractDir, archiveRootName);
+      const extractedRoot = path.join(extractDir, BACKUP_ROOT_NAME);
       if (!fs.existsSync(extractedRoot)) {
         throw new Error("Le fichier transmis ne correspond pas à une sauvegarde Cecil'Artiste valide.");
       }
@@ -885,6 +899,12 @@ app.post(
         ],
       };
     } finally {
+      if (archivePath) {
+        fs.rmSync(archivePath, { force: true });
+      }
+      if (req.backupUploadDir) {
+        fs.rmSync(req.backupUploadDir, { recursive: true, force: true });
+      }
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
 
