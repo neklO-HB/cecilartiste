@@ -24,6 +24,10 @@ const port = process.env.PORT || 3000;
 const DEFAULT_HERO_IMAGE_URL =
   'https://i.postimg.cc/brcb2z8C/21314712-8c8f-4d76-829b-f9a4fc4ecb31.png';
 const BACKUP_ROOT_NAME = 'cecilartiste-backup';
+const parsedBackupUploadLimit = Number(process.env.MAX_BACKUP_UPLOAD_SIZE_BYTES);
+const MAX_BACKUP_UPLOAD_SIZE_BYTES = Number.isFinite(parsedBackupUploadLimit)
+  ? parsedBackupUploadLimit
+  : 500 * 1024 * 1024; // 500 MB par défaut pour couvrir les sauvegardes volumineuses
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -172,7 +176,23 @@ const backupUpload = multer({
       cb(null, `backup-${Date.now()}${extension}`);
     },
   }),
+  limits: {
+    fileSize: MAX_BACKUP_UPLOAD_SIZE_BYTES,
+  },
 });
+
+function formatSize(bytes) {
+  const units = ['octets', 'Ko', 'Mo', 'Go', 'To'];
+  let size = bytes;
+  let unitIndex = 0;
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${size % 1 === 0 ? size : size.toFixed(1)} ${units[unitIndex]}`;
+}
 
 function photoUpload(field) {
   return (req, res, next) => {
@@ -196,6 +216,21 @@ function photoUploadMultiple(field, maxCount = 20) {
       return next();
     });
   };
+}
+
+function backupUploadHandler(req, res, next) {
+  backupUpload.single('backup')(req, res, err => {
+    if (err) {
+      const errorMessage =
+        err.code === 'LIMIT_FILE_SIZE'
+          ? `Le fichier est trop volumineux. Taille maximale autorisée : ${formatSize(MAX_BACKUP_UPLOAD_SIZE_BYTES)}.`
+          : "Le fichier de sauvegarde n'a pas pu être importé. Merci de réessayer.";
+      req.session.flash = { errors: [errorMessage] };
+      return res.redirect('/admin#backups');
+    }
+
+    return next();
+  });
 }
 
 function optionalUpload(field, redirectHash = '') {
@@ -852,7 +887,7 @@ app.get(
 app.post(
   '/admin/import',
   requireAuth,
-  backupUpload.single('backup'),
+  backupUploadHandler,
   asyncHandler(async (req, res) => {
     const archivePath = req.file?.path;
     const archiveSize = req.file?.size || 0;
