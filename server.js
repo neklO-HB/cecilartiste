@@ -29,8 +29,11 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Remove the default body size cap to avoid 413 errors behind reverse proxies.
 // Set BODY_SIZE_LIMIT env var (e.g. "500mb") to enforce a specific limit if needed.
-const BODY_SIZE_LIMIT = process.env.BODY_SIZE_LIMIT || '500mb';
-const MAX_UPLOAD_SIZE_BYTES = Number(process.env.MAX_UPLOAD_SIZE_BYTES) || 500 * 1024 * 1024; // 500 MB
+const BODY_SIZE_LIMIT = process.env.BODY_SIZE_LIMIT?.trim() || Infinity;
+const parsedUploadLimit = Number(process.env.MAX_UPLOAD_SIZE_BYTES);
+const MAX_UPLOAD_SIZE_BYTES = Number.isFinite(parsedUploadLimit)
+  ? parsedUploadLimit
+  : Infinity;
 
 app.use(express.urlencoded({ extended: true, limit: BODY_SIZE_LIMIT }));
 app.use(express.json({ limit: BODY_SIZE_LIMIT }));
